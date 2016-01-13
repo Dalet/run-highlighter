@@ -1,0 +1,10 @@
+*.pem
+*.crx
+*.xpi
+chrome/*
+!chrome/manifest.json
+!chrome/update.xml
+!chrome/lib/browser.api.js
+firefox/data/*
+firefox/data/lib/*
+!firefox/data/lib/browser.api.js

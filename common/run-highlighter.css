@@ -1,0 +1,45 @@
+div .run-highlighter.overlay-background {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: black;
+	opacity: 0.8;
+	display: block;
+	z-index: 9001;
+}
+div .run-highlighter.overlay-div {
+	position: absolute;
+	width: 450px;
+	height: 280px;
+	background-color: #fff;
+	opacity: 1;
+	z-index: 9002;
+	top:50%;
+	left:50%;
+	margin:-140px 0 0 -225px;
+	padding: 10px 10px 10px 10px;
+	border: 1px solid #9933ff;
+	box-shadow: 0px 0px 5px 2px rgba(153,51,255,1);
+	border-radius: 10px;
+	box-sizing: border-box;
+	font-size: 14px;
+	overflow: auto;
+	text-align: center;
+}
+
+#run-highlighter input#splits {
+	width: auto;
+	height: auto;
+}
+
+/*override FFZ dark mode*/
+#run-highlighter select {
+	border: 1px solid;
+	color: black;
+}
+#overlay-top {
+	text-align: right;
+	font-size: 11px;
+}

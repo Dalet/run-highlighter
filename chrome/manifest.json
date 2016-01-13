@@ -1,0 +1,32 @@
+{
+	"manifest_version": 2,
+	"name": "Run Highlighter",
+	"description": "Finds your runs in your past broadcasts on Twitch",
+	"version": "0.1.0",
+	"author": "Dalet",
+	"homepage_url": "https://github.com/Dalet/run-highlighter",
+	"update_url": "https://raw.githubusercontent.com/Dalet/run-highlighter/master/chrome/update.xml",
+	"icons": { "128": "icon_128.png" },
+	"content_scripts": [
+		{
+			"matches": [
+				"*://www.twitch.tv/*",
+				"*://twitch.tv/*"
+			],
+			"css": ["run-highlighter.css"],
+			"js": [
+				"lib/jquery-2.2.0.min.js",
+				"lib/browser.api.js",
+				"lib/waitForKeyElements.js",
+				"inject.js"
+			]
+		}
+	],
+	"web_accessible_resources": [
+		"lib/moment.js",
+		"lib/waitForKeyElements.js",
+		"run-highlighter-obj.js",
+		"run-highlighter.js",
+		"run-highlighter.html"
+	]
+}
