@@ -61,34 +61,22 @@ var RunHighlighter = RunHighlighter || {
 		return hours + minutes + ":" + seconds ;
 	},
 
-	_setStartValue: function(seconds, timeOut, callback) {
+	_setStartValue: function(seconds) {
 		if (isNaN(seconds))
 			return;
-		var self = this;
-		var selector = "input.start-time.string";
-		//waitForKeyElements(selector, function (jNode) {
-			var elem =  document.querySelector(selector);;
-			elem.value  =self._format_time(seconds);
-			$("input[name=start_time]").val(seconds);
-			self._globalTrigger(elem, "change"); //move markers
-			if (callback)
-				callback();
-		//});
+		var elem = document.querySelector("input.start-time.string");
+		elem.value = this._format_time(seconds);
+		$("input[name=start_time]").val(seconds);
+		this._globalTrigger(elem, "change"); //move markers
 	},
 
-	_setEndValue: function(seconds, callback) {
+	_setEndValue: function(seconds) {
 		if (isNaN(seconds))
 			return;
-		var selector = "input.end-time.string";
-		var self = this;
-		//waitForKeyElements(selector, function (jNode) {
-			var elem = document.querySelector(selector);
-			elem.value = self._format_time(seconds);
-			$("input[name=end_time]").val(seconds);
-			self._globalTrigger(elem, "change"); //move markers
-			if (callback)
-				callback();
-		//});
+		var elem = document.querySelector("input.end-time.string");
+		elem.value = this._format_time(seconds);
+		$("input[name=end_time]").val(seconds);
+		this._globalTrigger(elem, "change"); //move markers
 	},
 
 	_globalTrigger: function(elem, evnt) {
@@ -122,8 +110,8 @@ var RunHighlighter = RunHighlighter || {
 		setTimeout(function () {
 			if (player !== undefined && player.getVideoTime !== undefined
 				&& player.getVideoTime() > 0) {
-					player.videoSeek(self.start_time);
-					console.log("Run Highlighter: seeked to " + self.start_time);
+				player.videoSeek(self.start_time);
+				console.log("Run Highlighter: seeked to " + self.start_time);
 			} else
 				self._seekToStart();
 		}, 250);
@@ -150,9 +138,9 @@ var RunHighlighter = RunHighlighter || {
 
 		//prevent caching
 		if (str.indexOf("?") >= 0)
-		str += "&random="+ new Date().getTime();
+			str += "&random="+ new Date().getTime();
 		else
-		str += "?random=" + new Date().getTime();
+			str += "?random=" + new Date().getTime();
 
 		var url = str.indexOf("http") !== 0
 			? "https://api.twitch.tv/kraken/" + str

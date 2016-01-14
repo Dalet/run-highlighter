@@ -34,6 +34,7 @@ document.getElementById("splits").addEventListener("change", function(event) {
 	$('#run-history').hide();
 	if (event.target.files.length <= 0)
 		return;
+
 	var file = event.target.files[0];
 	var fr = new FileReader();
 	fr.onloadend = function(event) {
