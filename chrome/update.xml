@@ -1,6 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
-  <app appid='hchfkodoicngadchgbeiadeifcjohkde'>
-    <updatecheck codebase='https://github.com/Dalet/run-highlighter/releases/download/v0.1.0/run-highlighter.chrome.crx' version='0.1.0' />
-  </app>
-</gupdate>

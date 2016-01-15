@@ -5,7 +5,6 @@
 	"version": "0.1.0",
 	"author": "Dalet",
 	"homepage_url": "https://github.com/Dalet/run-highlighter",
-	"update_url": "https://raw.githubusercontent.com/Dalet/run-highlighter/master/chrome/update.xml",
 	"icons": { "128": "icon_128.png" },
 	"content_scripts": [
 		{
