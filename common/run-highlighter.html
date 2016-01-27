@@ -3,11 +3,27 @@
 	<div id="overlay-top"><a href="javascript: void(0)" class="overlay-close">close</a></div>
 	<h3>Run Highlighter</h3>
 	Select a splits file (<a href="http://livesplit.org/" target="_blank">LiveSplit</a> only):<br/>
-	<input id="splits" type='file'><br/><br/>
-	<div id="run-history" style="display: none">
-		Pick a run:<br/>
-		<select name="run"></select><br/><br/>
-		<a href="javascript: void(0);" id="search-vod">Find the video!</a>
+	<input id="splits" type='file'>
+	<ul class="tab-links" style="display: none">
+		 <li class="active"><a href="#tab1">Highlight a run</a></li>
+		 <li><a href="#tab2">Highlight a segment</a></li>
+	</ul>
+
+	<div class="tab-content" style="display: none">
+		<div id="tab1" class="tab active">
+			<div id="run-history">
+				Pick a run:<br/>
+				<select name="run"></select><br/>
+				<span id="run-highlighter-run-info"></span>
+			</div>
+		</div>
+		<div id="tab2" class="tab">
+			Segment: <select name="segmentName"></select><br/><br/>
+			Which time?<br/>
+			<select name="segmentId"></select><br/>
+			<span id="run-highlighter-segment-info"></span>
+		</div>
 	</div>
+	<a href="javascript: void(0);" style="display: none" id="search-vod">Find the video!</a><br/>
 	<span id="run-highlighter-error-message"></span>
 </div>

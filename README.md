@@ -2,7 +2,7 @@
 A browser extension that finds your runs in your Twitch past broadcasts.
 
 ## Features
-* Finds in which VOD and at which timestamp your runs started and ended
+* Finds in which VOD and at which timestamp your runs or segments started and ended
 * Automatically sets the highlighter to the correct `Start Time` and `End Time`
 
 ## Download page

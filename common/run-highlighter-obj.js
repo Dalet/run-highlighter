@@ -1,20 +1,20 @@
 jQuery.fn.reverse = function() {
-    return this.pushStack(this.get().reverse(), arguments);
+	return this.pushStack(this.get().reverse(), arguments);
 };
 
 console.log("Run Highlighter: code injected");
 
 var RunHighlighter = RunHighlighter || {
 	settings: {
-		buffer: 6
+		buffer: 7
 	},
 	_xhr: new XMLHttpRequest(),
 
 	highlight: function() {
 		var urlVars = this._getUrlVars();
-		this.start_time = parseInt(urlVars["start_time"]);
-		this.end_time = parseInt(urlVars["end_time"]);
-		this.automate = parseInt(urlVars["automate"]) === 1;
+		this.start_time = parseInt(urlVars.start_time);
+		this.end_time = parseInt(urlVars.end_time);
+		this.automate = parseInt(urlVars.automate) === 1;
 
 		if (!isNaN(this.start_time) || !isNaN(this.end_time))
 			this._markerLoop();
@@ -42,7 +42,8 @@ var RunHighlighter = RunHighlighter || {
 		return vars;
 	},
 
-	_format_time: function(seconds) {
+	_format_time: function(seconds, decimals) {
+		decimals = decimals || 0;
 		var hours = Math.floor(seconds / 3600);
 		if (hours > 0) {
 			seconds -= hours * 3600;
@@ -56,9 +57,10 @@ var RunHighlighter = RunHighlighter || {
 		if (hours !== "" && minutes < 10)
 			minutes = "0" + minutes;
 
+		seconds = seconds.toFixed(decimals);
 		if (seconds < 10)
 			seconds = "0" + seconds;
-		return hours + minutes + ":" + seconds ;
+		return hours + minutes + ":" + seconds;
 	},
 
 	_setStartValue: function(seconds) {
@@ -185,7 +187,7 @@ var RunHighlighter = RunHighlighter || {
 			if (video) {
 				var start_time = Math.floor(run.started.diff(moment(video.recorded_at)) / 1000);
 				var duration = run.ended.diff(run.started) / 1000;
-				var end_time = start_time + duration;
+				var end_time = start_time + Math.ceil(duration);
 				start_time -= self.settings.buffer;
 				end_time += self.settings.buffer;
 				if (start_time < 0) start_time = 0;
@@ -206,9 +208,10 @@ var RunHighlighter = RunHighlighter || {
 		var self = this;
 		max = max || 20;
 
+		var $doc;
 		try {
 			var xmlDoc = $.parseXML(str);
-			var $doc = $(xmlDoc);
+			$doc = $(xmlDoc);
 		} catch (e) { return null; }
 
 		var $attemptsElem = $doc.find("AttemptHistory");
@@ -216,31 +219,205 @@ var RunHighlighter = RunHighlighter || {
 			return null;
 		var attempts = [];
 		$attemptsElem.children("Attempt[started]").reverse().each(function(i) {
-			var attempt = self._attemptFromXML($(this));
-			if (attempt)
-				attempts.push(attempt);
-			if (attempts.length >= max)
-				return false;
+			if ($(this).children("RealTime").length > 0) {
+				var attempt = self._attemptFromXML($(this));
+				if (attempt)
+					attempts.push(attempt);
+				if (attempts.length >= max)
+					return false;
+			}
 		});
 		return attempts;
 	},
 
 	_attemptFromXML: function(elem) {
-		if (elem.children("RealTime").length > 0) {
-			var rta = elem.children("RealTime").text();
-			rta = rta.substring(0, rta.indexOf('.')); //remove decimals
-			while (rta.indexOf('00:') == 0 && rta.split(":").length > 2)
-				rta = rta.substr(3);
+		if (elem === undefined || elem === null)
+			return null;
 
-			return {
-				id: elem.attr("id"),
-				started: moment.utc(elem.attr("started"), ["MM-DD-YYYY HH:mm:ss", "DD-MM-YYYY HH:mm:ss"]),
-				isStartedSynced: elem.attr("isStartedSynced").toLowerCase() === 'true',
-				ended: moment.utc(elem.attr("ended"), ["MM-DD-YYYY HH:mm:ss", "DD-MM-YYYY HH:mm:ss"]),
-				isEndedSynced: elem.attr("isEndedSynced").toLowerCase() === 'true',
-				rta: rta
-			};
+		var self = this;
+
+		return {
+			id: elem.attr("id"),
+			started: elem.attr("started") !== undefined
+				? moment.utc(elem.attr("started"), ["MM-DD-YYYY HH:mm:ss", "DD-MM-YYYY HH:mm:ss"])
+				: null,
+			isStartedSynced: elem.attr("isStartedSynced") !== undefined
+				? elem.attr("isStartedSynced").toLowerCase() === 'true'
+				: null,
+			ended: elem.attr("ended") !== undefined
+				? moment.utc(elem.attr("ended"), ["MM-DD-YYYY HH:mm:ss", "DD-MM-YYYY HH:mm:ss"])
+				: null,
+			isEndedSynced: elem.attr("ended") !== undefined
+				? elem.attr("isEndedSynced").toLowerCase() === 'true'
+				: null,
+			rta: elem.children("RealTime").length > 0
+				? moment.duration(elem.children("RealTime").text())
+				: null,
+			igt: elem.children("GameTime").length > 0
+				? moment.duration(elem.children("GameTime").text())
+				: null
+		};
+	},
+
+	segmentToRun: function(seg) {
+		var run = {};
+		var timeUntilSeg = this._timeUntilSegmentAttempt(seg);
+		if (timeUntilSeg === null)
+			return null;
+		run.started = seg.attempt.started.clone().add(timeUntilSeg);
+		run.ended = run.started.clone().add(seg.rta);
+		run.isStartedSynced = seg.attempt.isStartedSynced;
+		run.isEndedSynced = seg.attempt.isEndedSynced;
+		run.rta = seg.rta;
+		run.igt = seg.igt;
+		return run;
+	},
+
+	_timeUntilSegmentAttempt: function(segAttempt) {
+		var root = segAttempt.segment.historyElem.closest("Run");
+		var time = null;
+		root.find("Segments").children("Segment").each(function(i, elem) {
+			elem = $(elem);
+			var timeElem = elem.children("SegmentHistory").children('Time[id="'+ segAttempt.attempt.id +'"]');
+			if (timeElem.length > 0 && timeElem.children("RealTime").length > 0) {
+				if (time === null)
+					time = moment.duration(0);
+				if (elem.children("Name").text() === segAttempt.segment.name)
+					return false;
+				time.add(moment.duration(timeElem.children("RealTime").text()));
+			}
+			return true;
+		});
+		return time;
+	},
+
+	segmentsFromXML: function(str) {
+		var self = this;
+		var $doc;
+		try {
+			var xmlDoc = $.parseXML(str);
+			$doc = $(xmlDoc);
+		} catch (e) { return null; }
+
+		var $segmentsElem = $doc.find("Segments");
+		if ($segmentsElem && $segmentsElem.length <= 0)
+			return null;
+		var segments = [];
+		var runs = [];
+		$doc.find("AttemptHistory").children("Attempt[started]:has(RealTime)").each(function() {
+			runs.unshift(self._attemptFromXML($(this)));
+		});
+		$segmentsElem.children("Segment").each(function(i) {
+			var segment = self._segmentFromXML($(this));
+			segment.attempts = runs;
+			if (segment)
+				segments.push(segment);
+		});
+		return segments;
+	},
+
+	_segmentFromXML: function(elem) {
+		var self = this;
+		if (elem.children("Name").length === 0)
+			return null;
+
+		//////////////
+		// SEGMENTS //
+		//////////////
+		var segment = {};
+		segment.name = elem.children("Name").text();
+		var best = elem.children("BestSegmentTime");
+		segment.bestRta = null;
+		segment.bestIgt = null;
+		if (best.children("RealTime").length > 0)
+			segment.bestRta = moment.duration(best.children("RealTime").text());
+		if (best.children("GameTime").length > 0)
+			segment.bestIgt = moment.duration(best.children("GameTime").text());
+		segment.historyElem = elem.children("SegmentHistory");
+
+		//PB segment
+		segment.pbRta = null;
+		segment.pbIgt = null;
+		var pbElem = elem.find('SplitTime[name="Personal Best"]');
+		var previous = elem.prev();
+		if (previous.length > 0 ) {
+			var previousT = previous.find('SplitTime[name="Personal Best"]');
+			var currSplit, prevSplit;
+			if (previousT.children("RealTime").length > 0) {
+				prevSplit = moment.duration(previousT.children("RealTime").text());
+				currSplit = moment.duration(pbElem.children("RealTime").text());
+				currSplit.subtract(prevSplit);
+				segment.pbRta = moment.duration(currSplit.asMilliseconds());
+			}
+			if (previousT.children("GameTime").length > 0) {
+				prevSplit = moment.duration(previousT.children("GameTime").text());
+				currSplit = moment.duration(pbElem.children("GameTime").text());
+				currSplit.subtract(prevSplit);
+				segment.pbIgt = moment.duration(currSplit.asMilliseconds());
+			}
+		} else {
+			if (pbElem.children("RealTime").length > 0)
+				segment.pbRta = moment.duration(pbElem.children("RealTime").text());
+			if (pbElem.children("GameTime").length > 0)
+				segment.pbIgt = moment.duration(pbElem.children("GameTime").text());
 		}
-		return null;
-	}
+
+		segment.useIgt = segment.pbIgt !== null;
+
+		//if PB is shorter than stored best then PB is best
+		if (segment.pbRta !== null) {
+			if (segment.bestRta === null || (segment.pbRta.asMilliseconds() < segment.bestRta.asMilliseconds()))
+				segment.bestRta = moment.duration(segment.pbRta.asMilliseconds());
+		}
+		if (segment.pbIgt !== null) {
+			if (segment.bestIgt === null || segment.pbIgt.asMilliseconds() < segment.bestIgt.asMilliseconds())
+				segment.bestIgt = moment.duration(segment.pbIgt.asMilliseconds());
+		}
+
+		//////////////////////
+		// SEGMENT ATTEMPTS //
+		//////////////////////
+		segment.getHistory = function(max) {
+			max = max || 25;
+			var history = [];
+			var foundBest = false;
+			var x = 0;
+			this.attempts.forEach(function(attempt) {
+				var elem = segment.historyElem.children('Time[id="' + attempt.id + '"]');
+				if (elem.children().length > 0)
+				{
+					var segAttempt = {};
+					segAttempt.attempt = attempt;
+					segAttempt.segment = segment;
+					segAttempt.rta = elem.children("RealTime").length > 0
+						? moment.duration(elem.children("RealTime").text())
+						: null;
+					segAttempt.igt = elem.children("GameTime").length > 0
+						? moment.duration(elem.children("GameTime").text())
+						: null;
+
+					if (segment.useIgt === true) {
+					segAttempt.isBest = segment.bestIgt !== null && segAttempt.igt !== null
+							&& segment.bestIgt.asMilliseconds() === segAttempt.igt.asMilliseconds();
+					} else {
+						segAttempt.isBest = segment.bestRta !== null
+							&& segAttempt.rta.asMilliseconds() === segment.bestRta.asMilliseconds();
+					}
+
+					if (segAttempt.isBest) {
+						history.unshift(segAttempt);
+						foundBest = true;
+					}
+					else if (history.length < max)
+						history.push(segAttempt);
+
+					x++;
+					if ((history.length >= max && foundBest === true) || x >= 1000)
+						return false;
+				}
+			});
+			return history;
+		};
+		return segment;
+	},
 };

@@ -1,4 +1,4 @@
-div .run-highlighter.overlay-background {
+div.run-highlighter.overlay-background {
 	position: absolute;
 	top: 0;
 	bottom: 0;
@@ -9,29 +9,47 @@ div .run-highlighter.overlay-background {
 	display: block;
 	z-index: 9001;
 }
-div .run-highlighter.overlay-div {
+div.run-highlighter.overlay-div {
 	position: absolute;
-	width: 450px;
-	height: 280px;
+	width: 460px;
+	height: 330px;
 	background-color: #fff;
 	opacity: 1;
 	z-index: 9002;
 	top:50%;
 	left:50%;
-	margin:-140px 0 0 -225px;
+	margin: -165px 0 0 -230px;
 	padding: 10px 10px 10px 10px;
 	border: 1px solid #9933ff;
-	box-shadow: 0px 0px 5px 2px rgba(153,51,255,1);
+	box-shadow: 0 0 5px 2px rgba(153,51,255,1);
 	border-radius: 10px;
 	box-sizing: border-box;
-	font-size: 14px;
+	font-size: 14px !important;
+	font-size-adjust: 0.5;
 	overflow: auto;
 	text-align: center;
+}
+
+div.run-highlighter.overlay-div a {
+	color: #6441a5a !important;
+}
+
+div.run-highlighter.overlay-div h3 {
+	padding: 0px;
+	margin: 0px;
+	margin-bottom: 10px;
+	line-height: 3rem;
+	font-size: 2.4rem;
+	font-weight: 400;
 }
 
 #run-highlighter input#splits {
 	width: auto;
 	height: auto;
+}
+
+select[name="segmentId"] {
+	min-width: 200px;
 }
 
 /*override FFZ dark mode*/
@@ -43,3 +61,80 @@ div .run-highlighter.overlay-div {
 	text-align: right;
 	font-size: 11px;
 }
+
+
+
+/*----- Tabs -----*/
+.run-highlighter.overlay-div {
+	 width: 100%;
+	 display: inline-block;
+}
+
+	 /*----- Tab Links -----*/
+	 /* Clearfix */
+	.run-highlighter.overlay-div .tab-links:after {
+		display: block;
+		clear: both;
+		content: '';
+	}
+
+	.run-highlighter.overlay-div ul .tab-links {
+		width: 50%;
+		/* Set the margin-left and margin-right automatically set */
+		margin: 0 auto;
+		margin-top: 15px;
+	}
+
+	.run-highlighter.overlay-div ul.tab-links { margin-top: 8px; }
+
+	.run-highlighter.overlay-div .tab-links li {
+		margin: 0px 5px !important;
+		float: left !important;
+		list-style: none !important;
+	}
+
+		/*FFZ's darkmode likes to override those*/
+		.run-highlighter.overlay-div .tab-links li a {
+			padding: 5px 7px;
+			display: inline-block;
+			border-radius: 3px 3px 0px 0px;
+			border-color: rgba(0,0,0,0.4);
+			border-width: 1px;
+			border-bottom-width: 0px;
+			border-style: solid;
+			background: rgba(100,100,100,0.15);
+			font-size: 14px !important;
+			font-weight: 600 ;
+			color: #4c4c4c !important;
+			transition: all linear 0.10s;
+		}
+
+		.run-highlighter.overlay-div .tab-links li a:hover {
+			background: rgba(100, 100, 100, 0.08);
+			text-decoration: none;
+		}
+
+	.run-highlighter.overlay-div .tab-links li.active a,
+	.run-highlighter.overlay-div .tab-links li.active a:hover {
+		background: transparent;
+		color: #4c4c4c;
+	}
+
+	 /*----- Content of Tabs -----*/
+	.run-highlighter.overlay-div .tab-content {
+		height: 120px;
+		padding: 10px 5px 5px 5px;
+		margin-bottom: 5px;
+		border-radius: 3px;
+		box-shadow: 1px 1px 1px rgba(0,0,0,0.15);
+		background: #fff;
+	}
+
+
+		.run-highlighter.overlay-div .tab {
+			display: none;
+		}
+
+		.run-highlighter.overlay-div .tab.active {
+			display: block;
+		}
