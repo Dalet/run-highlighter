@@ -79,7 +79,7 @@
 		segmentAttempts = [];
 		segmentsIdCb.empty();
 		segHistory.forEach(function(seg, i) {
-			var run = RunHighlighter.segmentToRun(seg);
+			var run = seg.ToRun();
 			segmentAttempts.push(run);
 			var time = selectedSegment.useIgt ? seg.igt : seg.rta;
 			var timeStr = RunHighlighter._format_time(time.asSeconds(), 2) + " " + (selectedSegment.useIgt ? "IGT" : "RTA");
@@ -127,8 +127,8 @@
 		var file = event.target.files[0];
 		var fr = new FileReader();
 		fr.onloadend = function(event) {
-			attempts = RunHighlighter.runsFromXML(event.target.result);
-			segments = RunHighlighter.segmentsFromXML(event.target.result);
+			attempts = Run.ArrayFromXML(event.target.result);
+			segments = Segment.ArrayFromXML(event.target.result);
 			setMsg(errorMessage, "");
 			setMsg(runInfo, "");
 			setMsg(segInfo, "");
