@@ -10,6 +10,10 @@
 		cancelSearch();
 		setMsg(errorMessage, "");
 
+		if (segmentTabLoaded === false && $(this).attr("href") === "#tab2") {
+			loadSegmentTab();
+		}
+
 		e.preventDefault();
 	});
 
@@ -33,6 +37,7 @@
 	var runInfo = $("#run-highlighter-run-info");
 	var segInfo = $("#run-highlighter-segment-info");
 	var searching = false;
+	var segmentTabLoaded = false;
 
 	var setMsg = function(elem, msg, color) {
 		elem.text(msg);
@@ -46,6 +51,27 @@
 		else if (what === "segment"
 			|| (what === undefined && $('.run-highlighter.overlay-div ul li:eq(1)').hasClass("active")))
 			return segmentAttempts[segmentsIdCb[0].selectedIndex];
+	};
+
+	var loadSegmentTab = function() {
+		segmentTabLoaded = true;
+		var fragment = document.createDocumentFragment();
+		//add segment names to the combobox
+		if (segments.length > 0) {
+			var x = 0;
+			segments.forEach(function(seg, i) {
+				x++;
+				var option = document.createElement("option");
+				option.innerText = x + ": \"" + seg.name + "\"";
+				fragment.appendChild(option);
+			});
+			segmentsNameCb.append(fragment);
+			segmentsNameCb.show();
+			segmentsNameCb.trigger('change');
+		} else {
+			segmentsNameCb.hide();
+			setMsg(segInfo, "No segments.", "black");
+		}
 	};
 
 	cancelSearch = function() {
@@ -75,27 +101,31 @@
 		setMsg(segInfo, "");
 
 		var selectedSegment = segments[segmentsNameCb[0].selectedIndex];
-		segHistory = selectedSegment.getHistory(50);
+		segHistory = selectedSegment.getHistory(20);
 		segmentAttempts = [];
 		segmentsIdCb.empty();
-		segHistory.forEach(function(seg, i) {
-			var run = seg.ToRun();
-			segmentAttempts.push(run);
-			var time = selectedSegment.useIgt ? seg.igt : seg.rta;
-			var timeStr = RunHighlighter._format_time(time.asSeconds(), 2) + " " + (selectedSegment.useIgt ? "IGT" : "RTA");
-			var warningStr = "";
-			if (seg.attempt.isStartedSynced === false || seg.attempt.isEndedSynced === false)
-				warningStr = " /!\\";
-			var ago = run.ended.from(moment.utc());
-			segmentsIdCb.append("<option>"
-				+ "#" + seg.attempt.id + ": " + timeStr + (seg.isBest ? " (Best)" : "")
-				+ ", " + ago + warningStr
-				+ "</option>");
-		});
+
 		if (segHistory.length === 0){
 			segmentsIdCb.hide();
-			setMsg(segInfo, "No highlightable segments were found;", "black");
+			setMsg(segInfo, "No highlightable segment was found.", "black");
 		} else {
+			var fragment = document.createDocumentFragment();
+			segHistory.forEach(function(seg, i) {
+				var run = seg.ToRun();
+				segmentAttempts.push(run);
+				var time = selectedSegment.useIgt ? seg.igt : seg.rta;
+				var timeStr = RunHighlighter._format_time(time.asSeconds(), 2) + " " + (selectedSegment.useIgt ? "IGT" : "RTA");
+				var warningStr = "";
+				if (seg.attempt.isStartedSynced === false || seg.attempt.isEndedSynced === false)
+					warningStr = " /!\\";
+				var ago = run.ended.from(moment.utc());
+
+				var option = document.createElement("option");
+				option.innerText =  "#" + seg.attempt.id + (seg.isPb ? " (PB)" : "") + " : " + timeStr + (seg.isBest ? " (Best)" : "")
+					+ ", " + ago + warningStr;
+				fragment.appendChild(option);
+			});
+			segmentsIdCb.append(fragment);
 			segmentsIdCb.show();
 			segmentsIdCb.trigger("change");
 		}
@@ -121,8 +151,11 @@
 		runsCombobox.empty();
 		setMsg(errorMessage, "");
 		$('.run-highlighter.overlay-div .tab-content, .run-highlighter.overlay-div .tab-links, a#search-vod').hide();
-		if (event.target.files.length <= 0)
+		$('.run-highlighter.overlay-div .tab-links a:eq(0)').trigger('click');
+
+		if (event.target.files.length <= 0) {
 			return;
+		}
 
 		var file = event.target.files[0];
 		var fr = new FileReader();
@@ -132,6 +165,7 @@
 			setMsg(errorMessage, "");
 			setMsg(runInfo, "");
 			setMsg(segInfo, "");
+			segmentTabLoaded = false;
 
 			if (attempts === null || segments === null) {
 				setMsg(errorMessage, "Invalid file", "red");
@@ -139,40 +173,26 @@
 			}
 
 			if (attempts.length === 0) {
-				setMsg(runInfo, "No highlightable runs were found.", "black");
+				setMsg(runInfo, "No highlightable run was found.", "black");
 				runsCombobox.hide();
 			} else {
-				runsCombobox.show();
-			}
-
-			//add complete runs to the combobox
-			attempts.forEach(function(run, i) {
-				var ago = run.ended.from(moment.utc());
-				var warningStr = "";
-				if (run.isStartedSynced === false || run.isEndedSynced === false)
+				//add complete runs to the combobox
+				var fragment = document.createDocumentFragment()
+				attempts.forEach(function(run, i) {
+					var ago = run.ended.from(moment.utc());
+					var warningStr = "";
+					if (run.isStartedSynced === false || run.isEndedSynced === false)
 					warningStr = " /!\\";
-				var useIgt = run.igt !== null;
-				var time = useIgt ? run.igt : run.rta;
-				var timeStr = RunHighlighter._format_time(time.asSeconds()) + " " + (useIgt ? "IGT" : "RTA");
-				runsCombobox.append("<option>" +
-					"#" + run.id + ": "+ timeStr + ", " + ago + warningStr
-					+ "</option>");
-			});
+					var useIgt = run.igt !== null;
+					var time = useIgt ? run.igt : run.rta;
+					var timeStr = RunHighlighter._format_time(time.asSeconds()) + " " + (useIgt ? "IGT" : "RTA");
 
-			//add segment names to the combobox
-			if (segments.length > 0) {
-				var x = 0;
-				segments.forEach(function(seg, i) {
-					x++;
-					segmentsNameCb.append("<option>"
-						+ x + ": \"" + seg.name + "\""
-						+ "</option>");
+					var option = document.createElement("option");
+					option.innerText = "#" + run.id + ": "+ timeStr + ", " + ago + warningStr;
+					fragment.appendChild(option);
 				});
-				segmentsNameCb.show();
-				segmentsNameCb.trigger('change');
-			} else {
-				segmentsNameCb.hide();
-				setMsg(segInfo, "No segments.", "black");
+				runsCombobox.append(fragment);
+				runsCombobox.show();
 			}
 
 			$('.run-highlighter.overlay-div .tab-content, .run-highlighter.overlay-div .tab-links, a#search-vod').show();

@@ -1,10 +1,5 @@
 console.log("Run Highlighter: code injected");
 
-jQuery.fn.reverse = function() {
-	return this.pushStack(this.get().reverse(), arguments);
-};
-
-
 /*
 * Run class
 */
@@ -65,15 +60,14 @@ Run.ArrayFromXML = function(str, max) {
 		return null;
 
 	var attempts = [];
-	$attemptsElem.children("Attempt[started]").reverse().each(function(i) {
-		if ($(this).children("RealTime").length > 0) {
-			var attempt = Run.FromXML($(this));
-			if (attempt)
-				attempts.push(attempt);
-			if (attempts.length >= max)
-				return false;
-		}
-	});
+	var elems = $attemptsElem.children("Attempt[started]:has(RealTime)");
+	for (i = elems.length - 1; i >= 0; i--) {
+		var attempt = Run.FromXML($(elems[i]));
+		if (attempt)
+			attempts.push(attempt);
+		if (attempts.length >= max)
+			break;
+	}
 	return attempts;
 };
 
@@ -87,8 +81,10 @@ var Segment = function() {
 	this.bestIgt = null;
 	this.pbRta = null;
 	this.pbIgt = null;
+	this.attemptsElem = null;
 	this.historyElem = null;
 	this.useIgt = false;
+	this.history = null;
 };
 
 Segment.FromXML = function(elem) {
@@ -161,44 +157,69 @@ Segment.ArrayFromXML = function(str) {
 	var $segmentsElem = $doc.find("Segments");
 	if ($segmentsElem && $segmentsElem.length <= 0)
 		return null;
+
+	var attemptsElem = $doc.find("AttemptHistory").children("Attempt[started]");
+	if (attemptsElem.length > 1000)
+		attemptsElem.slice(attemptsElem.length - 1000, attemptsElem.length);
+
 	var segments = [];
-	var runs = [];
-	$doc.find("AttemptHistory").children("Attempt[started]:has(RealTime)").each(function() {
-		runs.unshift(Run.FromXML($(this)));
-	});
 	$segmentsElem.children("Segment").each(function(i) {
 		var segment = Segment.FromXML($(this));
-		segment.attempts = runs;
-		if (segment)
+		if (segment) {
+			segment.attemptsElem = attemptsElem;
 			segments.push(segment);
+		}
 	});
 	return segments;
 };
 
 Segment.prototype.getHistory = function(max) {
+	var funcStart = performance.now();
+	if (this.history !== null) {
+		console.log("Run Highlighter: returned cached history");
+		return this.history;
+	}
+
+	console.log("Run Highlighter: parsing segment history...");
+
 	max = max || 25;
 	var history = [];
 	var foundBest = false;
-	var x = 0;
+	var foundPb = false;
 
 	var segment = this;
-	this.attempts.forEach(function(attempt) {
+	var elems = this.historyElem.children();
+	for (i = elems.length - 1; i >= 0; i--) {
+		var id = $(elems[i]).attr("id");
+		var attemptElem = segment.attemptsElem.filter('#' + id);
+
+		if (attemptElem.length === 0)
+			continue;
+
+		var attempt = Run.FromXML(attemptElem);
 		var segAttempt = SegmentAttempt.FromAttempt(segment, attempt);
-		if (segAttempt !== null) {
-			if (segAttempt.isBest) {
-				history.unshift(segAttempt);
-				foundBest = true;
-			}
-			else if (history.length < max) {
-				history.push(segAttempt);
-			}
 
-			x++;
-			if ((history.length >= max && foundBest === true) || x >= 1000)
-				return false;
+		if (segAttempt.isPb)
+			foundPb = true;
+
+		if (segAttempt.isBest) {
+			history.unshift(segAttempt);
+			foundBest = true;
 		}
-	});
+		else if (history.length < max) {
+			history.push(segAttempt);
+		}
 
+		if (history.length >= max
+			&& ((foundBest === true && foundPb === true)
+			|| moment.duration(moment().diff(attempt.ended)).asDays() > 30)) {
+			console.log("Run Highlighter: Stopped traversing segment history after " + (elems.length - i) + " entries");
+			break;
+		}
+	}
+
+	this.history = history;
+	console.log("Run Highlighter: getHistory() took " + (performance.now() - funcStart).toFixed(0) + "ms");
 	return history;
 };
 
@@ -213,32 +234,35 @@ var SegmentAttempt = function SegmentAttempt()
 	this.rta = null;
 	this.igt = null;
 	this.isBest = false;
+	this.isPb = false;
 };
 
 SegmentAttempt.FromAttempt = function(segment, attempt) {
-	var elem = segment.historyElem.children('Time[id="' + attempt.id + '"]');
-	if (elem.children().length > 0)
-	{
-		var segAttempt = new SegmentAttempt();
-		segAttempt.attempt = attempt;
-		segAttempt.segment = segment;
-		if (elem.children("RealTime").length > 0)
-			segAttempt.rta = moment.duration(elem.children("RealTime").text());
-		if (elem.children("GameTime").length > 0)
-			segAttempt.igt = moment.duration(elem.children("GameTime").text());
-
-		if (self.useIgt === true) {
-		segAttempt.isBest = segment.bestIgt !== null && segAttempt.igt !== null
-				&& segment.bestIgt.asMilliseconds() === segAttempt.igt.asMilliseconds();
-		} else {
-			segAttempt.isBest = segment.bestRta !== null
-				&& segAttempt.rta.asMilliseconds() === segment.bestRta.asMilliseconds();
-		}
-
-		return segAttempt;
-	} else {
+	var elem = segment.historyElem.children('#' + attempt.id);
+	if (elem.children().length === 0)
 		return null;
+
+	var segAttempt = new SegmentAttempt();
+	segAttempt.attempt = attempt;
+	segAttempt.segment = segment;
+	if (elem.children("RealTime").length > 0)
+		segAttempt.rta = moment.duration(elem.children("RealTime").text());
+	if (elem.children("GameTime").length > 0)
+		segAttempt.igt = moment.duration(elem.children("GameTime").text());
+
+	if (self.useIgt === true && segAttempt.igt !== null) {
+		segAttempt.isBest = segment.bestIgt !== null
+			&& segment.bestIgt.asMilliseconds() === segAttempt.igt.asMilliseconds();
+		segAttempt.isPb = segment.pbIgt !== null
+			&& segment.pbIgt.asMilliseconds() === segAttempt.igt.asMilliseconds();
+	} else {
+		segAttempt.isBest = segment.bestRta !== null
+			&& segAttempt.rta.asMilliseconds() === segment.bestRta.asMilliseconds();
+		segAttempt.isPb = segment.pbRta !== null
+			&& segment.pbRta.asMilliseconds() === segAttempt.rta.asMilliseconds();
 	}
+
+	return segAttempt;
 };
 
 SegmentAttempt.prototype.ToRun = function() {
@@ -263,17 +287,18 @@ SegmentAttempt.prototype.TimeUntil = function() {
 	var time = null;
 
 	var segAttempt = this;
-	root.find("Segments").children("Segment").each(function(i, elem) {
-		elem = $(elem);
-		var timeElem = elem.children("SegmentHistory").children('Time[id="'+ segAttempt.attempt.id +'"]');
-		if (timeElem.length > 0 && timeElem.children("RealTime").length > 0) {
-			if (time === null)
-				time = moment.duration(0);
-			if (elem.children("Name").text() === segAttempt.segment.name)
-				return false;
-			time.add(moment.duration(timeElem.children("RealTime").text()));
-		}
-		return true;
+	root.find("Segments").children("Segment").each(function() {
+		var elem = $(this);
+
+		var timeElem = elem.children("SegmentHistory").children('#' + segAttempt.attempt.id);
+		if (timeElem.length <= 0 || timeElem.children("RealTime").length <= 0)
+			return;
+
+		if (time === null)
+			time = moment.duration(0);
+		if (elem.children("Name").text() === segAttempt.segment.name)
+			return false;
+		time.add(moment.duration(timeElem.children("RealTime").text()));
 	});
 	return time;
 };
