@@ -62,7 +62,7 @@
 			segments.forEach(function(seg, i) {
 				x++;
 				var option = document.createElement("option");
-				option.innerText = x + ": \"" + seg.name + "\"";
+				option.textContent = x + ": \"" + seg.name + "\"";
 				fragment.appendChild(option);
 			});
 			segmentsNameCb.append(fragment);
@@ -121,7 +121,7 @@
 				var ago = run.ended.from(moment.utc());
 
 				var option = document.createElement("option");
-				option.innerText =  "#" + seg.attempt.id + (seg.isPb ? " (PB)" : "") + " : " + timeStr + (seg.isBest ? " (Best)" : "")
+				option.textContent =  "#" + seg.attempt.id + (seg.isPb ? " (PB)" : "") + " : " + timeStr + (seg.isBest ? " (Best)" : "")
 					+ ", " + ago + warningStr;
 				fragment.appendChild(option);
 			});
@@ -188,7 +188,7 @@
 					var timeStr = RunHighlighter._format_time(time.asSeconds()) + " " + (useIgt ? "IGT" : "RTA");
 
 					var option = document.createElement("option");
-					option.innerText = "#" + run.id + ": "+ timeStr + ", " + ago + warningStr;
+					option.textContent = "#" + run.id + ": "+ timeStr + ", " + ago + warningStr;
 					fragment.appendChild(option);
 				});
 				runsCombobox.append(fragment);
