@@ -3,13 +3,17 @@ console.log("Run Highlighter: code injected");
 /*
 * Run class
 */
-var Run = function() {
+var Run = function(type) {
+	this.type = type !== undefined && type !== null ? type : "run";
 	this.started = null;
 	this.ended = null;
 	this.isStartedSynced = null;
 	this.isEndedSynced = null;
 	this.rta = null;
 	this.igt = null;
+	this.gameName = null;
+	this.categoryName = null;
+	this.segmentName = null;
 };
 
 Run.FromXML = function(elem) {
@@ -38,6 +42,9 @@ Run.FromXML = function(elem) {
 
 	if (elem.children("GameTime").length > 0)
 		run.igt = moment.duration(elem.children("GameTime").text());
+
+	run.gameName = elem.closest("Run").children("GameName").text();
+	run.categoryName = elem.closest("Run").children("CategoryName").text();
 
 	return run;
 };
@@ -71,12 +78,33 @@ Run.ArrayFromXML = function(str, max) {
 	return attempts;
 };
 
+Run.prototype.getTitle = function() {
+	var useIgt =  this.igt !== null;
+	var time = useIgt ? this.igt : this.rta;
+	var timeStr = RunHighlighter._format_time(time.asSeconds());
+	if (useIgt)
+		timeStr += " IGT (" + RunHighlighter._format_time(this.rta.asSeconds()) + " RTA)";
+	var catStr = "";
+
+	if (this.type === "segment") {
+		if (this.categoryName.length > 0)
+			catStr = " (" + this.categoryName + ") ";
+		return this.gameName + catStr + "- " + this.segmentName + " in " + timeStr;
+	} else {
+		if (this.categoryName.length > 0)
+			catStr = " " + this.categoryName + " ";
+		return this.gameName + catStr + "speedrun in " + timeStr;
+	}
+};
+
 
 /*
 * Segment class
 */
 var Segment = function() {
 	this.name = null;
+	this.gameName = null;
+	this.categoryName = null;
 	this.bestRta = null;
 	this.bestIgt = null;
 	this.pbRta = null;
@@ -97,12 +125,14 @@ Segment.FromXML = function(elem) {
 	var segment = new Segment();
 
 	segment.name = elem.children("Name").text();
+	segment.historyElem = elem.children("SegmentHistory");
+	segment.gameName = segment.historyElem.closest("Run").children("GameName").text();
+	segment.categoryName = segment.historyElem.closest("Run").children("CategoryName").text();
 	var best = elem.children("BestSegmentTime");
 	if (best.children("RealTime").length > 0)
 		segment.bestRta = moment.duration(best.children("RealTime").text());
 	if (best.children("GameTime").length > 0)
 		segment.bestIgt = moment.duration(best.children("GameTime").text());
-	segment.historyElem = elem.children("SegmentHistory");
 
 	//PB segment
 	var pbElem = elem.find('SplitTime[name="Personal Best"]');
@@ -190,14 +220,18 @@ Segment.prototype.getHistory = function(max) {
 	var segment = this;
 	var elems = this.historyElem.children();
 	for (i = elems.length - 1; i >= 0; i--) {
+		if ($(elems[i]).children().length === 0)
+			continue;
+
 		var id = $(elems[i]).attr("id");
 		var attemptElem = segment.attemptsElem.filter('#' + id);
-
 		if (attemptElem.length === 0)
 			continue;
 
 		var attempt = Run.FromXML(attemptElem);
 		var segAttempt = SegmentAttempt.FromAttempt(segment, attempt);
+		if (segAttempt === null)
+			continue;
 
 		if (segAttempt.isPb)
 			foundPb = true;
@@ -266,7 +300,7 @@ SegmentAttempt.FromAttempt = function(segment, attempt) {
 };
 
 SegmentAttempt.prototype.ToRun = function() {
-	var run = new Run();
+	var run = new Run("segment");
 
 	var timeUntilSeg = this.TimeUntil();
 	if (timeUntilSeg === null)
@@ -278,6 +312,9 @@ SegmentAttempt.prototype.ToRun = function() {
 	run.isEndedSynced = this.attempt.isEndedSynced;
 	run.rta = this.rta;
 	run.igt = this.igt;
+	run.gameName = this.segment.gameName;
+	run.categoryName = this.segment.categoryName;
+	run.segmentName = this.segment.name;
 
 	return run;
 };
@@ -318,6 +355,13 @@ var RunHighlighter = RunHighlighter || {
 		this.start_time = parseInt(urlVars.start_time);
 		this.end_time = parseInt(urlVars.end_time);
 		this.automate = parseInt(urlVars.automate) === 1;
+		this.title = null;
+		
+		if (urlVars.title !== undefined && urlVars.title.length > 0) {
+			try {
+				this.title = window.atob(decodeURIComponent(urlVars.title));
+			} catch (e) { this.title = null; }
+		}
 
 		if (!isNaN(this.start_time) || !isNaN(this.end_time))
 			this._markerLoop();
@@ -395,8 +439,11 @@ var RunHighlighter = RunHighlighter || {
 		this._setStartValue(this.start_time);
 		this._setEndValue(this.end_time);
 
-		//$("input[name=title]").val("{game} speedrun in {igt} ({rta} RTA)");
+		if (this.title !== null)
+			$("input[name=title]").val(this.title);
+
 		$("input[name=tag_list]").val("speedrun, speedrunning");
+
 		if (!isNaN(this.start_time) && !isNaN(this.end_time)) {
 			//click "Describe Highlight"
 			$("div .highlight-content").find("button:eq(0)").click();
@@ -496,7 +543,7 @@ var RunHighlighter = RunHighlighter || {
 				if (start_time < 0) start_time = 0;
 				if (end_time > Math.floor(video.length)) end_time = Math.floor(video.length);
 				var link = "http://www.twitch.tv/" + channel + "/manager/" + video._id +
-					"/highlight?start_time=" + start_time + "&end_time=" + end_time;
+					"/highlight?start_time=" + start_time + "&end_time=" + end_time + "&title=" + encodeURIComponent(window.btoa(run.getTitle()));
 				callback(link);
 			} else if (!cancel && ret._total > videoCount) {
 				self._twitchApiCall(ret._links.next, listener);

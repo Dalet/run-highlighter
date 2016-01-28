@@ -47,10 +47,16 @@
 	var getSelectedRun = function(what) {
 		if (what === "run"
 			|| (what === undefined && $('.run-highlighter.overlay-div ul li:eq(0)').hasClass("active")))
+		{
+			if (attempts.length === 0) return null;
 			return attempts[runsCombobox[0].selectedIndex];
+		}
 		else if (what === "segment"
 			|| (what === undefined && $('.run-highlighter.overlay-div ul li:eq(1)').hasClass("active")))
+		{
+			if (segmentAttempts.length === 0) return null;
 			return segmentAttempts[segmentsIdCb[0].selectedIndex];
+		}
 	};
 
 	var loadSegmentTab = function() {
@@ -210,6 +216,12 @@
 		setMsg(errorMessage, "Searching...", "black");
 
 		var run = getSelectedRun();
+		if (run === undefined || run === null) {
+			setMsg(errorMessage, "Choose something to highlight first.", "red");
+			searching = false;
+			return;
+		}
+
 		console.log("RunHighlighter: Selected run:");
 		console.log(run);
 
