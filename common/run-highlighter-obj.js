@@ -328,8 +328,10 @@ SegmentAttempt.prototype.TimeUntil = function() {
 		var elem = $(this);
 
 		var timeElem = elem.children("SegmentHistory").children('#' + segAttempt.attempt.id);
-		if (timeElem.length <= 0 || timeElem.children("RealTime").length <= 0)
-			return;
+		if (timeElem.length <= 0 || timeElem.children("RealTime").length <= 0) {
+			time = null;
+			return false;
+		}
 
 		if (time === null)
 			time = moment.duration(0);
@@ -356,7 +358,7 @@ var RunHighlighter = RunHighlighter || {
 		this.end_time = parseInt(urlVars.end_time);
 		this.automate = parseInt(urlVars.automate) === 1;
 		this.title = null;
-		
+
 		if (urlVars.title !== undefined && urlVars.title.length > 0) {
 			try {
 				this.title = window.atob(decodeURIComponent(urlVars.title));

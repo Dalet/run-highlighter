@@ -118,6 +118,9 @@
 			var fragment = document.createDocumentFragment();
 			segHistory.forEach(function(seg, i) {
 				var run = seg.ToRun();
+				if (run === null || run === undefined)
+					return;
+
 				segmentAttempts.push(run);
 				var time = selectedSegment.useIgt ? seg.igt : seg.rta;
 				var timeStr = RunHighlighter._format_time(time.asSeconds(), 2) + " " + (selectedSegment.useIgt ? "IGT" : "RTA");
@@ -132,8 +135,13 @@
 				fragment.appendChild(option);
 			});
 			segmentsIdCb.append(fragment);
-			segmentsIdCb.show();
-			segmentsIdCb.trigger("change");
+			if (segmentsIdCb.children().length === 0) {
+				segmentsIdCb.hide();
+				setMsg(segInfo, "No highlightable segment was found.", "black");
+			} else {
+				segmentsIdCb.show();
+				segmentsIdCb.trigger("change");
+			}
 		}
 	});
 
