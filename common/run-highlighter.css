@@ -25,7 +25,7 @@ div.run-highlighter.overlay-div {
 	border-radius: 10px;
 	box-sizing: border-box;
 	font-size: 14px !important;
-	color: black !important; /* override ffz dark mode*/ 
+	color: black !important; /* override ffz dark mode*/
 	font-size-adjust: 0.5;
 	overflow: auto;
 	text-align: center;
@@ -56,14 +56,13 @@ select[name="segmentId"] {
 /*override FFZ dark mode*/
 #run-highlighter select {
 	border: 1px solid !important;
+	color: black !important;
 }
 
 #overlay-top {
 	text-align: right;
 	font-size: 11px;
 }
-
-
 
 /*----- Tabs -----*/
 .run-highlighter.overlay-div {
