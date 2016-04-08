@@ -8,6 +8,9 @@ A browser extension that finds your runs in your Twitch past broadcasts.
 ## Download page
 https://github.com/Dalet/run-highlighter/releases/latest
 
+## How do I start using it?
+You can access it on the profile of your channel (`twitch.tv/your_name_here/profile`), or its video manager. [Picture](http://i.imgur.com/9WhYmIQ.png)
+
 ## Contact
 * [Twitter](https://twitter.com/Dalleth_)
 * [Twitch](http://twitch.tv/dalleth_)
