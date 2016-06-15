@@ -1,7 +1,7 @@
 {
   "title": "Run Highlighter",
   "name": "run-highlighter",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Finds your runs in your past broadcasts on Twitch",
   "main": "index.js",
   "author": "Dalet",
@@ -9,7 +9,7 @@
   "updateURL": "https://raw.githubusercontent.com/Dalet/run-highlighter/master/firefox/update.rdf",
   "icon": "resource://run-highlighter/data/icon_128.png",
   "permissions": {
-	  "private-browsing": true
+    "private-browsing": true
   },
   "engines": {
     "firefox": ">=38.0a1",
@@ -18,9 +18,9 @@
   "license": "MIT",
   "keywords": [
     "run highlighter",
-	"twitch",
-	"highlight",
-	"speedrun",
-	"speedrunning"
+    "twitch",
+    "highlight",
+    "speedrun",
+    "speedrunning"
   ]
 }
