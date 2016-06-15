@@ -130,7 +130,7 @@
 				var ago = run.ended.from(moment.utc());
 
 				var option = document.createElement("option");
-				option.textContent =  "#" + seg.attempt.id + (seg.isPb ? " (PB)" : "") + " : " + timeStr + (seg.isBest ? " (Best)" : "")
+				option.textContent =  "#" + seg.attempt.id + (seg.isPb ? " (PB)" : "") + ": " + timeStr + (seg.isBest ? " (Best)" : "")
 					+ ", " + ago + warningStr;
 				fragment.appendChild(option);
 			});
@@ -199,7 +199,7 @@
 					warningStr = " /!\\";
 					var useIgt = run.igt !== null;
 					var time = useIgt ? run.igt : run.rta;
-					var timeStr = RunHighlighter._format_time(time.asSeconds()) + " " + (useIgt ? "IGT" : "RTA");
+					var timeStr = RunHighlighter._format_time(time.asSeconds(), 2) + " " + (useIgt ? "IGT" : "RTA");
 
 					var option = document.createElement("option");
 					option.textContent = "#" + run.id + ": "+ timeStr + ", " + ago + warningStr;
