@@ -50,15 +50,20 @@
 				inject();
 			});
 		} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights)\/?$/.test(window.location.pathname)
-			|| /^\/[^\/]+(\/profile(\/[^\/]+)?)?\/?$/.test(window.location.pathname)) {
-			waitForKeyElements("div .directory_header li:eq(1)", function() {
-				var link = $('<li><a href="javascript: void(0);">Run Highlighter</a></li>');
-				$("div .directory_header li:eq(1)").after(link);
-				link.click(function() {
-					$("#run-highlighter > div").show();
+			|| /^\/[^\/]+\/profile(\/[^\/]+)?\/?$/.test(window.location.pathname)) {
+			// prevent injecting in pages that aren't channels profile
+			var channel = window.location.pathname.split("/")[1];
+			var blacklist = ["settings"];
+			if (blacklist.indexOf(channel) < 0) {
+				waitForKeyElements("div .directory_header li:eq(1)", function() {
+					var link = $('<li><a href="javascript: void(0);">Run Highlighter</a></li>');
+					$("div .directory_header li:eq(1)").after(link);
+					link.click(function() {
+						$("#run-highlighter > div").show();
+					});
+					inject();
 				});
-				inject();
-			});
+			}
 		}
 	}, 1000);
 })();
