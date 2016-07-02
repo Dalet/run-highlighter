@@ -1,5 +1,3 @@
-console.log("Run Highlighter: code injected");
-
 /*
 * Run class
 */
