@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <title>Run Highlighter</title>
+
+  <!-- Bootstrap Core CSS -->
+  <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="bootstrap/css/bootstrap-select.min.css">
+  <link href="css/index.css" rel="stylesheet">
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and
+  media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file://
+  -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+
+<div class="container">
+
+  <div class="row page-header">
+    <h1>Run Highlighter</h1>
+  </div>
+
+  <div class="form-group">
+    <label for="channel">Channel:</label>
+    <input id="channel" type="text" class="form-control" placeholder="Twitch Username">
+    <p class="help-block hidden"></p>
+  </div>
+
+  <div class="form-group center-block">
+    <label for="splits">Splits file:</label>
+    <input type="file" id="splits">
+    <p class="help-block"><a href="http://livesplit.org/" target="_blank">LiveSplit</a> only</p>
+  </div>
+
+  <div style="display: none;" id="run-select">
+
+    <ul class="nav nav-tabs" id="tab-links">
+      <li class="active"><a href="#tab1">Runs</a></li>
+      <li><a href="#tab2">Segments</a></li>
+    </ul>
+
+    <div id="tab-content">
+      <div id="tab1" class="tab active">
+        <div class="form-group">
+        <label for="run">Pick a run:</label>
+        <select class="selectpicker form-control" name="run"></select>
+        <p class="help-block" id="run-info"></p>
+        </div>
+      </div>
+
+      <div id="tab2" class="tab">
+        <div class="form-group">
+          <label for="segmentName">Segment:</label>
+          <select class="selectpicker form-control" name="segmentName"></select>
+        </div>
+        <div class="form-group">
+          <label for="segmentId">Which time?</label>
+          <select class="selectpicker form-control" name="segmentId"></select>
+          <p class="help-block" id="segment-info"></p>
+        </div>
+      </div>
+    </div>
+    <button type="button" id="search-button" class="btn btn-primary center-block">Search</button>
+  </div>
+  <div class="hidden" id="error-message"></div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p class="text-muted text-center"><a href="https://github.com/Dalet/run-highlighter/releases/latest">
+      Get the add-on</a>
+      &bull;
+      <a href="https://twitter.com/dalleth_">Twitter</a>
+      &bull;
+      <a href="https://github.com/Dalet/run-highlighter">GitHub</a>
+    </p>
+  </div>
+</footer>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<!-- Bootstrap Core JavaScript -->
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<script src="bootstrap/js/bootstrap-select.min.js"></script>
+<script type="text/javascript" src="js/moment.js"></script>
+<script type="text/javascript" src="js/run-highlighter.js"></script>
+<script type="text/javascript" src="js/index.js"></script>
+
+<!-- Google Analytics-->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-80209494-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</body>
+</html>
