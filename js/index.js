@@ -148,7 +148,7 @@
 				segmentAttempts.push(run);
 
 				var timeStr = RunHighlighter._format_time(seg.rta.asSeconds(), 2) + " RTA";
-				if (selectedSegment.useIgt) {
+				if (seg.igt) {
 					timeStr = RunHighlighter._format_time(seg.igt.asSeconds(), 2) + " IGT / " + timeStr;
 				}
 
