@@ -29,6 +29,14 @@
 	var searching = false;
 	var segmentTabLoaded = false;
 
+	var getUrlVars = function() {
+		var vars = {};
+		var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+			vars[key] = value;
+		});
+		return vars;
+	};
+
 	var setMsg = function(elem, msg, color) {
 		elem.text(msg);
 		if (color)
@@ -329,7 +337,10 @@
 		$("input#splits").change();
 	}
 
-	if (typeof(Storage) !== "undefined") {
+	var urlVars = getUrlVars();
+	if (urlVars["channel"] !== undefined) {
+		$("input#channel").val(urlVars["channel"]);
+	} else if (typeof(Storage) !== "undefined") {
 		$("input#channel").val(localStorage.getItem("channel"));
 	}
 })();

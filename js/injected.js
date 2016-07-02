@@ -163,13 +163,14 @@
 		if (/^\/[^\/]+\/manager\/[^\/]+\/highlight\/?$/.test(window.location.pathname))
 			Highlighter.highlight();
 
-		var rh_url = "https://dalet.github.io/run-highlighter/";
 		var currentUrl = null;
 
 		setInterval(function() {
 			if (window.location.href === currentUrl)
 				return;
 			currentUrl = window.location.href;
+			var channel = window.location.pathname.split("/")[1];
+			var rh_url = "https://dalet.github.io/run-highlighter/?channel=" + channel;
 
 			if (/^\/[^\/]+\/manager\/[^\/]+\/highlight\/?$/.test(window.location.pathname)) {
 				waitForKeyElements("form.highlight-form fieldset h4:eq(0)", function() {
@@ -179,7 +180,6 @@
 			} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights)\/?$/.test(window.location.pathname)
 				|| /^\/[^\/]+\/profile(\/[^\/]+)?\/?$/.test(window.location.pathname)) {
 				// prevent injecting in pages that aren't channels profile
-				var channel = window.location.pathname.split("/")[1];
 				var blacklist = ["settings"];
 				if (blacklist.indexOf(channel) < 0) {
 					waitForKeyElements("div .directory_header li:eq(1)", function() {
@@ -188,6 +188,6 @@
 					});
 				}
 			}
-		}, 1000);
+		}, 750);
 	});
 })();
