@@ -374,10 +374,10 @@ var RunHighlighter = RunHighlighter || {
 	_twitchApiCall: function(str, callback){
 		var self = this;
 		var listener = function() {
-			self._xhr.removeEventListener("load", listener);
+			self._xhr.removeEventListener("loadend", listener);
 			callback();
 		};
-		this._xhr.addEventListener("load", listener);
+		this._xhr.addEventListener("loadend", listener);
 
 		//prevent caching
 		if (str.indexOf("?") >= 0)
@@ -406,9 +406,23 @@ var RunHighlighter = RunHighlighter || {
 		var self = this;
 		var videoCount = 0;
 		var listener = function(event) {
-			var ret = JSON.parse(self._xhr.response);
-			if (ret.status === 404)
-				return false;
+			var ret = null;
+			try {
+				ret = JSON.parse(self._xhr.response);
+			} catch(e) {}
+
+			var requestInfo = {
+				"status": self._xhr.status,
+				"statusText": self._xhr.statusText,
+				"response": ret
+			};
+
+			if (requestInfo.status >= 300 || !ret)
+			{
+				callback(null, requestInfo);
+				return;
+			}
+
 			videoCount += ret.videos.length;
 			console.log("Run Highlighter: retrieved " + videoCount + " out of " + ret._total + " total...");
 			var video = null;
@@ -445,11 +459,11 @@ var RunHighlighter = RunHighlighter || {
 					"addon_link": addon_link,
 					"duration": duration
 				}
-				callback(highlight);
+				callback(highlight, requestInfo);
 			} else if (!cancel && ret._total > videoCount) {
 				self._twitchApiCall(ret._links.next, listener);
 			} else {
-				callback(null);
+				callback(null, requestInfo);
 			}
 		};
 		this._twitchApiCall("channels/" + channel + "/videos?broadcasts=true", listener);

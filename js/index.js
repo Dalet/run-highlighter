@@ -287,11 +287,31 @@
 
 		try {
 			console.log("Run Highlighter: started searching for video...");
-			RunHighlighter.searchRun(channel, run, function(highlight){
+			RunHighlighter.searchRun(channel, run, function(highlight, requestInfo){
 				if (!highlight)
 				{
-					setErrMsg("No video matched in this channel.", "alert-danger");
-					return;
+					// 2xx codes are not errors
+					if (requestInfo.status >= 200 && requestInfo.status < 300)
+					{
+						setErrMsg("No video matched in channel '<strong>" + channel + "</strong>'.", "alert-warning");
+						return;
+					}
+
+					var header = "<big><strong>An error has occurred!</strong></big><br><br>";
+					switch (requestInfo.status)
+					{
+						case 0:
+							setErrMsg(header + "The API request could not be sent.", "alert-danger");
+							return;
+						case 404:
+							$('input#channel').parent().addClass("has-error");
+						default:
+							searching = false;
+							header += "<strong>"+ requestInfo.status + " " + requestInfo.statusText + "</strong>"
+								+ (!requestInfo.response || !requestInfo.response.message ? "" : "<br>" + requestInfo.response.message);
+							setErrMsg(header, "alert-danger");
+							return;
+					}
 				}
 
 				var addon = document.body.hasAttribute("run-highlighter-addon");
