@@ -325,10 +325,12 @@
 					+ '<strong>End time:</strong> <kbd>' + end_str + '</kbd>'
 				if (!addon)
 				{
+					var link = '<a class="addon-download-link">Run Highligher add-on</a>';
 					setErrMsg(message
-						+ '<br/><br/>Install the <a href="https://github.com/Dalet/run-highlighter/releases/latest">Run Highligher add-on</a>'
+						+ '<br/><br/>Install the ' + link
 						+ ' to set the highlight markers automatically!',
 						"alert-success");
+					makeDownloadLink($("#error-message .addon-download-link"));
 				} else {
 					setErrMsg(message + '<br/><br/>You are being redirected to the highlighter page...</span>',
 						"alert-success");
@@ -363,4 +365,41 @@
 	} else if (typeof(Storage) !== "undefined") {
 		$("input#channel").val(localStorage.getItem("channel"));
 	}
+
+	function makeDownloadLink(elem) {
+		elem.attr("href", "https://github.com/Dalet/run-highlighter/releases/latest");
+
+		// shamelessly inspired by https://lordmau5.com/bttv4ffz/
+		function isUnsupported(userAgent) {
+			if(userAgent.indexOf("Edge/") > -1)
+				return true;
+			return false;
+		}
+
+		if(document.body.hasAttribute("run-highlighter-addon") || isUnsupported(navigator.userAgent))
+			return;
+
+		if(typeof InstallTrigger !== 'undefined') {
+			var xhr = new XMLHttpRequest();
+			var listener = function() {
+				xhr.removeEventListener("load", listener);
+				var ret = JSON.parse(xhr.response);
+				ret.assets.some(function(asset){
+					if (asset.content_type == "application/x-xpinstall"){
+						elem.attr("href", asset.browser_download_url);
+						return true;
+					}
+				});
+			};
+			xhr.addEventListener("load", listener);
+
+			xhr.open("GET", "https://api.github.com/repos/Dalet/run-highlighter/releases/latest");
+			xhr.send();
+		}
+		else if(!!window.chrome) {
+			elem.attr("onclick", "chrome.webstore.install(); return false;");
+		}
+	}
+
+	makeDownloadLink($(".addon-download-link"));
 })();
