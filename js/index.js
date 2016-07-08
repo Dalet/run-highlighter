@@ -37,14 +37,6 @@
 		return vars;
 	};
 
-	var setMsg = function(elem, msg, color) {
-		elem.text(msg);
-		if (color)
-			elem.css("color", color);
-		else
-			elem.css("color", "initial");
-	};
-
 	var setErrMsg = function(msg, alert)
 	{
 		var elem = $("#error-message");
@@ -98,7 +90,7 @@
 			segmentsNameCb.trigger('change');
 		} else {
 			segmentsNameCb.selectpicker("hide");
-			setMsg(segInfo, "No segments.", "black");
+			segInfo.text("No segments.");
 		}
 		segmentsNameCb.selectpicker('refresh');
 	};
@@ -115,11 +107,11 @@
 	runsCombobox.change(function(){
 		cancelSearch();
 		setErrMsg("");
-		setMsg(runInfo, "");
+		runInfo.text("");
 		var run = getSelectedRun("run");
 		if (run !== null) {
 			if (run.isStartedSynced === false || run.isEndedSynced === false) {
-				setMsg(runInfo, "This run might not be found precisely.");
+				runInfo.text("This run might not be found precisely.");
 			}
 		}
 	});
@@ -127,7 +119,7 @@
 	segmentsNameCb.change(function() {
 		cancelSearch();
 		setErrMsg("");
-		setMsg(segInfo, "");
+		segInfo.text("");
 
 		var selectedSegment = segments[segmentsNameCb[0].selectedIndex];
 		segHistory = selectedSegment.getHistory(20);
@@ -136,7 +128,7 @@
 
 		if (segHistory.length === 0){
 			segmentsIdCb.selectpicker("hide");
-			setMsg(segInfo, "No highlightable segment was found.", "black");
+			segInfo.text("No highlightable segment was found.");
 		} else {
 			var fragment = document.createDocumentFragment();
 			segHistory.forEach(function(seg, i) {
@@ -167,7 +159,7 @@
 			segmentsIdCb.append(fragment);
 			if (segmentsIdCb.children().length === 0) {
 				segmentsIdCb.selecpicker("hide");
-				setMsg(segInfo, "No highlightable segment was found.", "black");
+				segInfo.text("No highlightable segment was found.");
 			} else {
 				segmentsIdCb.selectpicker("show");
 				segmentsIdCb.trigger("change");
@@ -179,11 +171,11 @@
 	segmentsIdCb.change(function() {
 		cancelSearch();
 		setErrMsg("");
-		setMsg(segInfo, "");
+		segInfo.text("");
 		var run = getSelectedRun("segment");
 		if (run !== null) {
 			if (run.isStartedSynced === false || run.isEndedSynced === false) {
-				setMsg(segInfo, "This segment might not be found precisely.");
+				segInfo.text("This segment might not be found precisely.");
 			}
 		}
 	});
@@ -208,8 +200,8 @@
 			attempts = Run.ArrayFromXML(event.target.result);
 			segments = Segment.ArrayFromXML(event.target.result);
 			setErrMsg("");
-			setMsg(runInfo, "");
-			setMsg(segInfo, "");
+			runInfo.text("");
+			segInfo.text("");
 			segmentTabLoaded = false;
 
 			if (attempts === null || segments === null) {
@@ -218,7 +210,7 @@
 			}
 
 			if (attempts.length === 0) {
-				setMsg(runInfo, "No highlightable run was found.", "black");
+				runInfo.text("No highlightable run was found.");
 				runsCombobox.selectpicker("hide");
 			} else {
 				//add complete runs to the combobox
