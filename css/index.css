@@ -11,6 +11,17 @@ div#tab-content {
 	margin-bottom: 15px;
 }
 
+@media (max-width: 767px) {
+	.page-header {
+		margin-top: 0px;
+	}
+
+	.page-header h1 {
+		margin-top: 5px;
+		text-align: center;
+	}
+}
+
 .col-centered {
 	float: none;
 	margin: 0 auto;
