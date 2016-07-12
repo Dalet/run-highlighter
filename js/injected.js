@@ -176,7 +176,7 @@
 				waitForKeyElements("form.highlight-form fieldset h4:eq(0)", function() {
 					var link = $('<a href="' + rh_url + '">use Run Highlighter</a>');
 					$("form.highlight-form fieldset h4:eq(0)").append("<br/>or ").append(link);
-				});
+				}, true);
 			} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights)\/?$/.test(window.location.pathname)
 				|| /^\/[^\/]+\/profile(\/[^\/]+)?\/?$/.test(window.location.pathname)) {
 				// prevent injecting in pages that aren't channels profile
@@ -185,7 +185,7 @@
 					waitForKeyElements("div .directory_header li:eq(1)", function() {
 						var link = $('<li><a href="' + rh_url +'">Run Highlighter</a></li>');
 						$("div .directory_header li:eq(1)").after(link);
-					});
+					}, true);
 				}
 			}
 		}, 750);
