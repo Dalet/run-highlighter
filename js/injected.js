@@ -180,7 +180,7 @@
 			} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights)\/?$/.test(window.location.pathname)
 				|| /^\/[^\/]+\/profile(\/[^\/]+)?\/?$/.test(window.location.pathname)) {
 				// prevent injecting in pages that aren't channels profile
-				var blacklist = ["settings", "directory"];
+				var blacklist = ["settings"];
 				if (blacklist.indexOf(channel) < 0) {
 					waitForKeyElements("div .directory_header li:eq(1)", function() {
 						var link = $('<li><a href="' + rh_url +'">Run Highlighter</a></li>');
