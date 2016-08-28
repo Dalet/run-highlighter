@@ -105,10 +105,10 @@
 
 			if (!isNaN(this.start_time) && !isNaN(this.end_time)) {
 				//click "Describe Highlight"
-				$("div .highlight-content").find("button:eq(0)").click();
+				$("form.highlight-form").find("button:eq(0)").click();
 				//click "Create Highlight"
 				if (this.automate === true)
-					$("div .highlight-content").find("button:eq(1)").click();
+					$("form.highlight-form").find("button:eq(1)").click();
 			}
 		},
 
