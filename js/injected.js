@@ -15,6 +15,7 @@
 			this.end_time = parseInt(urlVars.end_time);
 			this.automate = parseInt(urlVars.automate) === 1;
 			this.title = null;
+			this._player = null;
 
 			if (urlVars.title !== undefined && urlVars.title.length > 0) {
 				try {
@@ -22,22 +23,55 @@
 				} catch (e) { this.title = null; }
 			}
 
-			if (!isNaN(this.start_time) || !isNaN(this.end_time))
-				this._markerLoop();
-			if (!isNaN(this.start_time))
-				this._seekToStart();
+			this._waitForPlayer(0);
+		},
+
+		_waitForPlayer: function(delay) {
+			var self = this;
+			setTimeout(function() {
+				var player = self.getPlayer();
+				if (player) {
+					console.log("Run Highlighter: Player found");
+					// use video events for html5
+					if (self.isPlayerHTML5()) {
+						var loadedmetadata = function() {
+							console.log("Run Highlighter: loadedmetadata, started filling form and seeking");
+							self._fillForm();
+							self._seekToStartLoop();
+						};
+						if (self.isPlayerReady()) {
+							console.log("Run Highlighter: player was ready before setting up listener, firing manually");
+							loadedmetadata();
+						}
+						$(player).on("loadedmetadata", loadedmetadata);
+					} else { // use a loop for flash
+						self._playerReadyLoop(0);
+					}
+				} else
+					self._waitForPlayer();
+			}, delay !== undefined ? delay : 75);
 		},
 
 		isPlayerReady: function() {
 			try {
-				if (this.getPlayer().getVideoTime() >= 0)
+				var player = this.getPlayer();
+				if (player && this.isPlayerHTML5()) {
+					return player.duration > 0;
+				}
+				else if (player.getVideoTime() > 0)
 					return true;
 			} catch (e) { }
 			return false;
 		},
 
 		getPlayer: function() {
-			return $("div#player").find("object")[0];
+			if (this._player)
+				return this._player;
+			return this._player = $("div.player video")[0] || $("div#player").find("object")[0];
+		},
+
+		isPlayerHTML5: function() {
+			return this.getPlayer().tagName.toLowerCase() === "video";
 		},
 
 		_getUrlVars: function() {
@@ -112,31 +146,53 @@
 			}
 		},
 
-		//waits for the player to load and seeks to the highlight start
-		_seekToStart: function() {
-			if (this.start_time <= 1)
-				return;
-			var self = this;
-			var player = this.getPlayer();
-			setTimeout(function () {
-				if (player !== undefined && player.getVideoTime !== undefined
-					&& player.getVideoTime() > 0) {
-					player.videoSeek(self.start_time);
-					console.log("Run Highlighter: seeked to " + self.start_time);
-				} else
-					self._seekToStart();
-			}, 250);
+		getPlayerCurrentTime: function() {
+			if (this.isPlayerHTML5())
+				return this.getPlayer().currentTime;
+			else
+				return this.getPlayer().getVideoTime();
 		},
 
-		_markerLoop: function() {
+		_seekToStart: function() {
+			var player = this.getPlayer();
+			if (this.isPlayerHTML5())
+				player.currentTime = this.start_time;
+			else
+				player.videoSeek(this.start_time);
+			console.log("Run Highlighter: seeked to " + this.start_time);
+		},
+
+		_seekToStartLoop: function(delay) {
+			if (isNaN(this.start_time) || this.start_time <= 0)
+				return;
+
+			var self = this;
+			setTimeout(function () {
+				if (self.getPlayerCurrentTime() > 0)
+					self._seekToStart();
+				else
+					self._seekToStartLoop();
+			}, delay !== undefined ? delay : 250);
+		},
+
+		_onPlayerReady: function() {
+
+		},
+
+		//waits for the player to load to do stuff (flash only)
+		_playerReadyLoop: function(delay) {
+			if (isNaN(this.start_time) || isNaN(this.end_time))
+				return;
+
 			var self = this;
 			setTimeout(function() {
 				if (self.isPlayerReady()) {
-					console.log("Run Highlighter: player ready");
+					console.log("Run Highlighter: player ready, started filling & seeking");
 					self._fillForm();
+					self._seekToStartLoop(0);
 				} else
-					self._markerLoop();
-			}, 250);
+					self._playerReadyLoop();
+			}, delay !== undefined ? delay : 250);
 		}
 	};
 
