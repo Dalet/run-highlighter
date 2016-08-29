@@ -158,7 +158,7 @@
 			});
 			segmentsIdCb.append(fragment);
 			if (segmentsIdCb.children().length === 0) {
-				segmentsIdCb.selecpicker("hide");
+				segmentsIdCb.selectpicker("hide");
 				segInfo.text("No highlightable segment was found.");
 			} else {
 				segmentsIdCb.selectpicker("show");
