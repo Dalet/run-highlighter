@@ -344,7 +344,8 @@
 
 					$("a#cancel-redirection").click(function() {
 						window.clearInterval(redirect_interval);
-						setErrMsg(message, "alert-success");
+						setErrMsg(message + "<br/><br/>Click the VOD link to start highlighting with the add-on."
+							, "alert-success");
 						console.log("Cancelled redirection.");
 					});
 				}
