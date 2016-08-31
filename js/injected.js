@@ -185,7 +185,7 @@
 				if (self.isPlayerReady()) {
 					console.log("Run Highlighter: player ready, started filling & seeking");
 					self._fillForm();
-					self._seekToStartLoop(500);
+					self._seekToStartLoop(self.isPlayerHTML5() ? 1000 : 0);
 				} else
 					self._playerReadyLoop();
 			}, delay !== undefined ? delay : 250);
