@@ -175,10 +175,6 @@
 			}, delay !== undefined ? delay : 250);
 		},
 
-		_onPlayerReady: function() {
-
-		},
-
 		//waits for the player to load to do stuff (flash only)
 		_playerReadyLoop: function(delay) {
 			if (isNaN(this.start_time) || isNaN(this.end_time))
@@ -189,7 +185,7 @@
 				if (self.isPlayerReady()) {
 					console.log("Run Highlighter: player ready, started filling & seeking");
 					self._fillForm();
-					self._seekToStartLoop(0);
+					self._seekToStartLoop(200);
 				} else
 					self._playerReadyLoop();
 			}, delay !== undefined ? delay : 250);
