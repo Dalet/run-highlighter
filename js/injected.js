@@ -34,16 +34,21 @@
 					console.log("Run Highlighter: Player found");
 					// use video events for html5
 					if (self.isPlayerHTML5()) {
+						var player = $(player);
 						var loadedmetadata = function() {
 							console.log("Run Highlighter: loadedmetadata, started filling form and seeking");
 							self._fillForm();
-							self._seekToStartLoop();
+							self._seekToStartLoop(500);
 						};
 						if (self.isPlayerReady()) {
 							console.log("Run Highlighter: player was ready before setting up listener, firing manually");
 							loadedmetadata();
 						}
-						$(player).on("loadedmetadata", loadedmetadata);
+						player.on("loadedmetadata", loadedmetadata);
+						player.on("seeking", function() {
+							console.log("Run Highlighter: player is seeking to " + player[0].currentTime
+								 + " (t="+ new Date().toISOString().substr(14, 9) + ")");
+						});
 					} else { // use a loop for flash
 						self._playerReadyLoop(0);
 					}
@@ -159,7 +164,7 @@
 				player.currentTime = this.start_time;
 			else
 				player.videoSeek(this.start_time);
-			console.log("Run Highlighter: seeked to " + this.start_time);
+			console.log("Run Highlighter: seeking to " + this.start_time);
 		},
 
 		_seekToStartLoop: function(delay) {
@@ -185,7 +190,7 @@
 				if (self.isPlayerReady()) {
 					console.log("Run Highlighter: player ready, started filling & seeking");
 					self._fillForm();
-					self._seekToStartLoop(self.isPlayerHTML5() ? 1000 : 0);
+					self._seekToStartLoop(0);
 				} else
 					self._playerReadyLoop();
 			}, delay !== undefined ? delay : 250);
