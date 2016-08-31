@@ -324,9 +324,29 @@
 						"alert-success");
 					makeDownloadLink($("#error-message .addon-download-link"));
 				} else {
-					setErrMsg(message + '<br/><br/>You are being redirected to the highlighter page...</span>',
+					setErrMsg(message + '<br/><br/>You will be redirected to the highlighter page in'
+						+ ' <span id="redirection-countdown">3</span> seconds...'
+						+ ' <a href="javascript:void(0)" id="cancel-redirection">cancel</a></span>',
 						"alert-success");
-					window.location.href = highlight.addon_link;
+
+					var cdElem = $("#redirection-countdown");
+					var redirect_interval = setInterval(function() {
+						var secsLeft = parseInt(cdElem.text()) - 1;
+						cdElem.text(secsLeft);
+						if (secsLeft <= 0) {
+							window.clearInterval(redirect_interval);
+							setErrMsg(message + '<br/><br/>You are being redirected to the highlighter page...</span>',
+								"alert-success");
+							window.location.href = highlight.addon_link;
+							console.log("Redirecting to " + highlight.addon_link + " ...");
+						}
+					}, 1000);
+
+					$("a#cancel-redirection").click(function() {
+						window.clearInterval(redirect_interval);
+						setErrMsg(message, "alert-success");
+						console.log("Cancelled redirection.");
+					});
 				}
 			});
 		} catch (e) {
