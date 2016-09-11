@@ -357,7 +357,7 @@
 
 						if (i > 0)
 							message += '<br/><br/>';
-						message += '<h5><b>'+ part + ' :</b></h5>';
+						message += '<h5><b>'+ part + ':</b></h5>';
 						message += highlight_message(h);
 
 						if (i == highlight.length - 1 && !end_found)
