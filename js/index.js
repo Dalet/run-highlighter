@@ -28,6 +28,7 @@
 	var segInfo = $("#segment-info");
 	var searching = false;
 	var segmentTabLoaded = false;
+	var redirect_interval = null;
 
 	var getUrlVars = function() {
 		var vars = {};
@@ -102,6 +103,9 @@
 				RunHighlighter._xhr.abort();
 			}
 			searching = false;
+		if (redirect_interval !== null)
+			window.clearInterval(redirect_interval);
+		redirect_interval = null;
 	};
 
 	runsCombobox.change(function(){
@@ -197,7 +201,7 @@
 		var file = event.target.files[0];
 		var fr = new FileReader();
 		fr.onloadend = function(event) {
-			attempts = Run.ArrayFromXML(event.target.result);
+			attempts = Run.ArrayFromXML(event.target.result, 1500);
 			segments = Segment.ArrayFromXML(event.target.result);
 			setErrMsg("");
 			runInfo.text("");
@@ -308,46 +312,116 @@
 
 				var addon = document.body.hasAttribute("run-highlighter-addon");
 
-				var start_str = RunHighlighter._format_time(highlight.start_time);
-				var end_str = RunHighlighter._format_time(highlight.end_time);
-				var link = ' <a' + (addon ? '' : ' target="_blank"') + ' href="' + highlight.addon_link  + '">'
-					+ '<strong>' + highlight.link + '</strong></a>';
-				var message = '<big><strong>Found it!</strong></big><br/><br/><strong>VOD</strong>: ' + link + '<br/>'
-					+ '<strong>Start time:</strong> <kbd>' + start_str + '</kbd><br/>'
-					+ '<strong>End time:</strong> <kbd>' + end_str + '</kbd>'
-				if (!addon)
-				{
-					var link = '<a class="addon-download-link">Run Highligher add-on</a>';
-					setErrMsg(message
-						+ '<br/><br/>Install the ' + link
-						+ ' to set the highlight markers automatically!',
-						"alert-success");
-					makeDownloadLink($("#error-message .addon-download-link"));
+				function highlight_message(h) {
+					var start_str = RunHighlighter._format_time(h.start_time);
+					var end_str = RunHighlighter._format_time(h.end_time);
+					var link = ' <a class="vod-link" ' + (!addon || Array.isArray(highlight) ? ' target="_blank"': '')
+						+ ' href="' + h.get_addon_link() + '">'
+						+ '<strong>' + h.link + '</strong></a>';
+					return '<strong>VOD</strong>: ' + link + '<br/>'
+						+ '<strong>Start time:</strong> <kbd>' + start_str + '</kbd><br/>'
+						+ '<strong>End time:</strong> <kbd>' + end_str + '</kbd>';
+				}
+
+				var message = "";
+
+				var all_parts_found = !Array.isArray(highlight);
+				if (!all_parts_found) {
+					var start_found = false;
+					var end_found = false;
+
+					highlight.forEach(function (h, i) {
+						if (h.part === "first")
+							start_found = true;
+						else if (h.part === "last")
+							end_found = true;
+
+						var part;
+						if (h.part === "first") {
+							part = "First part";
+							h.title = h.title + " part 1";
+						}
+						else if (h.part === "last") {
+							part = "Last part";
+							var part_number = highlight.length + (start_found ? 0 : 1);
+							h.title = h.title + " part " + part_number;
+						}
+						else {
+							var part_number = i + (start_found ? 1 : 2);
+							part = "Part " + part_number;
+							h.title = h.title + " part " + part_number;
+						}
+
+						if (i == 0 && !start_found)
+							message += '<h5><b>First part:</b></h5><span style="padding: 3px" class="bg-danger">Not found!</span><br/><br/>';
+
+						if (i > 0)
+							message += '<br/><br/>';
+						message += '<h5><b>'+ part + ' :</b></h5>';
+						message += highlight_message(h);
+
+						if (i == highlight.length - 1 && !end_found)
+							message += '<br/><br/><h5><b>Last part:</b></h5><span style="padding: 3px" class="bg-danger">Not found!</span>';
+					});
+
+					all_parts_found = start_found && end_found;
+				} else
+					message += highlight_message(highlight);
+
+				if (!all_parts_found) {
+					message = '<h4><strong>Some parts are missing</strong></h4><br/>' + message;
+					setErrMsg(message, "alert-success");
 				} else {
+					if (Array.isArray(highlight))
+						message = '<h4><strong>Multiple parts found</strong></h4><br/>' + message;
+					else
+						message = '<h4><strong>Found it!</strong></h4><br/>' + message;
+					setErrMsg(message, "alert-success");
+				}
+
+				if (Array.isArray(highlight)) {
+					$("div#error-message").append('<br/><br/><a href="javascript:void(0)" id="open-all-vods">Open all VOD links</a>');
+					$("a#open-all-vods").click(function() {
+						$("a.vod-link").each(function() {
+							window.open($(this).attr("href"), "_blank");
+						});
+					});
+				} else if (addon) {
 					setErrMsg(message + '<br/><br/>You will be redirected to the highlighter page in'
 						+ ' <span id="redirection-countdown">3</span> seconds...'
 						+ ' <a href="javascript:void(0)" id="cancel-redirection">cancel</a></span>',
 						"alert-success");
 
 					var cdElem = $("#redirection-countdown");
-					var redirect_interval = setInterval(function() {
+					redirect_interval = setInterval(function() {
 						var secsLeft = parseInt(cdElem.text()) - 1;
 						cdElem.text(secsLeft);
 						if (secsLeft <= 0) {
 							window.clearInterval(redirect_interval);
+							redirect_interval = null;
 							setErrMsg(message + '<br/><br/>You are being redirected to the highlighter page...</span>',
 								"alert-success");
-							window.location.href = highlight.addon_link;
-							console.log("Redirecting to " + highlight.addon_link + " ...");
+							window.location.href = highlight.get_addon_link();
+							console.log("Redirecting to " + highlight.get_addon_link() + " ...");
 						}
 					}, 1000);
 
 					$("a#cancel-redirection").click(function() {
 						window.clearInterval(redirect_interval);
-						setErrMsg(message + "<br/><br/>Click the VOD link to start highlighting with the add-on."
-							, "alert-success");
+						redirect_interval = null;
+						setErrMsg(message + "<br/><br/>Click the VOD link to start highlighting with the add-on.",
+							"alert-success");
 						console.log("Cancelled redirection.");
 					});
+				}
+
+				if (!addon)
+				{
+					var link = '<a class="addon-download-link">Run Highligher add-on</a>';
+					var text = '<br/><br/>Install the ' + link
+						+ ' to set the highlight markers automatically!';
+					$("div#error-message").append(text);
+					makeDownloadLink($("#error-message .addon-download-link"));
 				}
 			});
 		} catch (e) {

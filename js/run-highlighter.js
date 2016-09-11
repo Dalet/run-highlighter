@@ -41,8 +41,8 @@ Run.FromXML = function(elem) {
 	if (elem.children("GameTime").length > 0)
 		run.igt = moment.duration(elem.children("GameTime").text());
 
-	run.gameName = elem.closest("Run").children("GameName").text();
-	run.categoryName = elem.closest("Run").children("CategoryName").text();
+	run.gameName = elem.closest("Run").children("GameName").text().trim();
+	run.categoryName = elem.closest("Run").children("CategoryName").text().trim();
 
 	return run;
 };
@@ -82,7 +82,7 @@ Run.prototype.getTitle = function() {
 	var timeStr = RunHighlighter._format_time(time.asSeconds());
 	if (useIgt)
 		timeStr += " IGT (" + RunHighlighter._format_time(this.rta.asSeconds()) + " RTA)";
-	var catStr = "";
+	var catStr = " ";
 
 	if (this.type === "segment") {
 		if (this.categoryName.length > 0)
@@ -124,8 +124,10 @@ Segment.FromXML = function(elem) {
 
 	segment.name = elem.children("Name").text();
 	segment.historyElem = elem.children("SegmentHistory");
-	segment.gameName = segment.historyElem.closest("Run").children("GameName").text();
-	segment.categoryName = segment.historyElem.closest("Run").children("CategoryName").text();
+	segment.gameName = segment.historyElem.closest("Run")
+		.children("GameName").text().trim();
+	segment.categoryName = segment.historyElem.closest("Run")
+		.children("CategoryName").text().trim();
 	var best = elem.children("BestSegmentTime");
 	if (best.children("RealTime").length > 0)
 		segment.bestRta = moment.duration(best.children("RealTime").text());
@@ -405,6 +407,8 @@ var RunHighlighter = RunHighlighter || {
 	searchRun: function(channel, run, callback){
 		var self = this;
 		var videoCount = 0;
+		var all_parts_found = false;
+
 		var listener = function(event) {
 			var ret = null;
 			try {
@@ -427,45 +431,104 @@ var RunHighlighter = RunHighlighter || {
 			console.log("Run Highlighter: retrieved " + videoCount + " out of " + ret._total + " total...");
 			var video = null;
 			var cancel = false;
-			ret.videos.some(function(vid, i, array){
-				if(self.searchVideo(vid, run)){
+			ret.videos.some(function(vid, i, array) {
+				var part = self._getVideoPart(vid, run);
+				if (part === "last" || part === "middle" || part === "first") {
+					if (video === null)
+						video = [vid];
+					else
+						video.push(vid);
+					console.log("Run Highlighter: found " + part +" part, id: " + vid._id);
+					all_parts_found = part === "first";
+					return all_parts_found;
+				} else if (part === "full") {
 					video = vid;
-					console.log("Run Highlighter: found matching video id: " + video._id);
+					all_parts_found = true;
+					console.log("Run Highlighter: found full matching video; id: " + vid._id);
 					return true;
-				}
-				else if (moment.utc(vid.recorded_at).isBefore(run.started)) {
+				} else if (moment.utc(vid.recorded_at).isBefore(run.started)) {
 					//stop searching if the other videos are older than the run
 					cancel = true;
 					console.log("Run Highlighter: stopped searching at vid n°" + (i + 1 + videoCount - array.length));
 					return true;
 				}
-				return false;
 			});
 
-			if (video) {
-				var start_time = Math.floor(run.started.diff(moment(video.recorded_at)) / 1000);
-				var duration = run.ended.diff(run.started) / 1000;
-				var end_time = start_time + Math.ceil(duration);
-				start_time -= self.settings.buffer;
-				end_time += self.settings.buffer;
-				if (start_time < 0) start_time = 0;
-				if (end_time > Math.floor(video.length)) end_time = Math.floor(video.length);
-				var link = "https://www.twitch.tv/" + channel + "/manager/" + video._id + "/highlight";
-				var addon_link = link + "?start_time=" + start_time + "&end_time=" + end_time + "&title=" + encodeURIComponent(window.btoa(run.getTitle()));
-				var highlight = {
-					"start_time": start_time,
-					"end_time": end_time,
-					"link": link,
-					"addon_link": addon_link,
-					"duration": duration
-				}
-				callback(highlight, requestInfo);
-			} else if (!cancel && ret._total > videoCount) {
+			if (video && (all_parts_found || cancel)) {
+				var highlights = Array.isArray(video)
+					? self._videosToHighlights(channel, video, run)
+					: self._videoToHighlight(channel, video, run);
+				callback(highlights, requestInfo);
+			} else if (!cancel && ret._total > videoCount)
 				self._twitchApiCall(ret._links.next, listener);
-			} else {
+			else
 				callback(null, requestInfo);
-			}
 		};
 		this._twitchApiCall("channels/" + channel + "/videos?broadcasts=true", listener);
+	},
+
+	_videoToHighlight: function(channel, video, run) {
+		console.log(video);
+		var part = this._getVideoPart(video, run);
+		var recorded_at = moment.utc(video.recorded_at);
+
+		var start_time = 0;
+		if (part === "full" || part == "first") {
+			start_time = Math.floor(run.started.diff(recorded_at) / 1000);
+			start_time -= this.settings.buffer;
+		}
+
+		var end_time = Math.floor(video.length);
+		if (part === "full" || part === "last") {
+			end_time = Math.floor(run.ended.diff(recorded_at) / 1000);
+			end_time += this.settings.buffer;
+		}
+
+		if (start_time < 0) start_time = 0;
+		if (end_time > Math.floor(video.length)) end_time = Math.floor(video.length);
+
+		var duration = run.ended.diff(run.started) / 1000;
+		var link = "https://www.twitch.tv/" + channel + "/manager/" + video._id + "/highlight";
+		var title = run.getTitle();
+
+		return {
+			"title": title,
+			"start_time": start_time,
+			"end_time": end_time,
+			"link": link,
+			"duration": duration,
+			"part": part,
+			"get_addon_link": function() {
+				return this.link + "?start_time=" + this.start_time
+					+ "&end_time=" + this.end_time
+					+ "&title="+ encodeURIComponent(window.btoa(this.title));
+			}
+		};
+	},
+
+	_videosToHighlights: function (channel, videos, run) {
+		var highlights = [];
+		var i;
+		for (i = videos.length - 1; i >= 0; --i) {
+			highlights.push(this._videoToHighlight(channel, videos[i], run, i));
+		}
+		return highlights;
+	},
+
+	_getVideoPart: function (video, run){
+		var vidStart = moment.utc(video.recorded_at);
+		var vidEnd = vidStart.clone().add(video.length, 'seconds');
+
+		if (vidStart.isSameOrBefore(run.started) && vidEnd.isSameOrAfter(run.ended))
+			return "full";
+		else if (vidStart.isAfter(run.started) && vidEnd.isBefore(run.ended))
+			return "middle";
+		else if (vidStart.isAfter(run.started) && vidStart.isBefore(run.ended)
+			&& vidEnd.isSameOrAfter(run.ended))
+			return "last";
+		else if (vidStart.isSameOrBefore(run.started) && vidEnd.isAfter(run.started))
+			return "first";
+		else
+			return null;
 	}
 };
