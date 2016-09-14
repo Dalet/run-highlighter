@@ -258,9 +258,9 @@
 						+ 'box-shadow: rgba(100,65,164,0.75) 0 0 10px;'
 						+ '">'
 						+ '<h4 style="text-align: center; margin-bottom: 5px;">Please wait...</h4>'
-						+ '<p style="font-size: 13px; margin-bottom: 5px;">Run Highlighter is waiting for the player to load.</p>'
+						+ '<p style="font-size: 13px; margin-bottom: 3px;">Run Highlighter is waiting for the player to load.</p>'
 						+ '<p style="text-align: right;">seems broken?'
-						+ ' <a href="https://goo.gl/forms/2lyRNy0tl03rqlt82" target="_blank">contact me</a></span>'
+						+ ' <a href="https://goo.gl/forms/2lyRNy0tl03rqlt82">contact me</a></p>'
 						+ '</div>';
 					if (!isNaN(Highlighter.start_time) || !isNaN(Highlighter.end_time)
 						|| Highlighter.title !== null)
