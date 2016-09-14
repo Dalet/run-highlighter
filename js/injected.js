@@ -56,6 +56,7 @@
 			console.log("Run Highlighter: started filling form & seeking");
 			var self = this;
 
+			$("div.run-highlighter-loading-msg").addClass("hidden");
 			this._fillForm();
 			var delay = this.isPlayerHTML5() ? 500 : 0;
 			this._readyToSeekLoop(function() { self._seekToStart(); }, delay);
@@ -249,6 +250,21 @@
 
 			if (/^\/[^\/]+\/manager\/[^\/]+\/highlight\/?$/.test(window.location.pathname)) {
 				waitForKeyElements("form.highlight-form fieldset h4:eq(0)", function() {
+					msg = '<div class="run-highlighter-loading-msg" style="'
+						+ 'border: 1px solid rgba(60,60,60,1);' //#4e4e4e
+						+ 'padding: 10px;'
+						+ 'margin-bottom: 10px;'
+						+ 'background: rgba(255, 255, 255, 0.07);'
+						+ 'box-shadow: rgba(100,65,164,0.75) 0 0 10px;'
+						+ '">'
+						+ '<h4 style="text-align: center; margin-bottom: 5px;">Please wait...</h4>'
+						+ '<p style="font-size: 13px; margin-bottom: 5px;">Run Highlighter is waiting for the player to load.</p>'
+						+ '<p style="text-align: right;">seems broken?'
+						+ ' <a href="https://goo.gl/forms/2lyRNy0tl03rqlt82" target="_blank">contact me</a></span>'
+						+ '</div>';
+					if (!isNaN(Highlighter.start_time) || !isNaN(Highlighter.end_time)
+						|| Highlighter.title !== null)
+						$("form.highlight-form").parent().prepend(msg);
 					var link = $('<br/>or <a href="' + rh_url + '">use Run Highlighter</a>');
 					$("form.highlight-form fieldset h4:eq(0)").append(link);
 				}, true);
