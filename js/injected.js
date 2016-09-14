@@ -13,7 +13,7 @@
 			var urlVars = this._getUrlVars();
 			this.start_time = parseInt(urlVars.start_time);
 			this.end_time = parseInt(urlVars.end_time);
-			this.automate = parseInt(urlVars.automate) === 1;
+			this.automate = urlVars.automate === "true" || parseInt(urlVars.automate) === 1;
 			this.title = null;
 			this._player = null;
 
@@ -23,46 +23,62 @@
 				} catch (e) { this.title = null; }
 			}
 
-			this._waitForPlayer(0);
+			var self = this;
+			this._waitForPlayer(function() { self._onPlayerFound(); }, 0);
 		},
 
-		_waitForPlayer: function(delay) {
+		_onPlayerFound: function() {
+			console.log("Run Highlighter: Player found");
+			var self = this;
+			var callback = function() { self._onPlayerReady(); };
+
+			// use a loop for flash
+			if (!this.isPlayerHTML5()) {
+				this._playerReadyLoop(callback, 0);
+				return;
+			}
+
+			// use video events for html5
+			if (this.isPlayerReady()) {
+				console.log("Run Highlighter: player was ready before setting up listener, firing manually");
+				callback();
+			}
+
+			var player = $(this.getPlayer());
+			player.on("loadedmetadata", callback);
+			player.on("seeking", function() {
+				console.log("Run Highlighter: player is seeking to " + player[0].currentTime
+					+ " (t="+ new Date().toISOString().substr(11, 12) + ")");
+			});
+		},
+
+		_onPlayerReady: function() {
+			console.log("Run Highlighter: started filling form & seeking");
+			var self = this;
+
+			this._fillForm();
+			var delay = this.isPlayerHTML5() ? 500 : 0;
+			this._readyToSeekLoop(function() { self._seekToStart(); }, delay);
+		},
+
+		_waitForPlayer: function(callback, delay) {
+			if (!callback)
+				throw "Undefined callback argument";
 			var self = this;
 			setTimeout(function() {
 				var player = self.getPlayer();
-				if (player) {
-					console.log("Run Highlighter: Player found");
-					// use video events for html5
-					if (self.isPlayerHTML5()) {
-						var player = $(player);
-						var loadedmetadata = function() {
-							console.log("Run Highlighter: loadedmetadata, started filling form and seeking");
-							self._fillForm();
-							self._seekToStartLoop(500);
-						};
-						if (self.isPlayerReady()) {
-							console.log("Run Highlighter: player was ready before setting up listener, firing manually");
-							loadedmetadata();
-						}
-						player.on("loadedmetadata", loadedmetadata);
-						player.on("seeking", function() {
-							console.log("Run Highlighter: player is seeking to " + player[0].currentTime
-								 + " (t="+ new Date().toISOString().substr(14, 9) + ")");
-						});
-					} else { // use a loop for flash
-						self._playerReadyLoop(0);
-					}
-				} else
-					self._waitForPlayer();
+				if (player)
+					callback();
+				else
+					self._waitForPlayer(callback);
 			}, delay !== undefined ? delay : 75);
 		},
 
 		isPlayerReady: function() {
 			try {
 				var player = this.getPlayer();
-				if (player && this.isPlayerHTML5()) {
+				if (player && this.isPlayerHTML5())
 					return player.duration > 0;
-				}
 				else if (player.getVideoTime() > 0)
 					return true;
 			} catch (e) { }
@@ -114,7 +130,7 @@
 			var elem = document.querySelector("input.start-time.string");
 			elem.value = this._format_time(seconds);
 			$("input[name=start_time]").val(seconds);
-			this._globalTrigger(elem, "change"); //move markers
+			this._simulateEvent(elem, "change"); //move markers
 		},
 
 		_setEndValue: function(seconds) {
@@ -123,13 +139,13 @@
 			var elem = document.querySelector("input.end-time.string");
 			elem.value = this._format_time(seconds);
 			$("input[name=end_time]").val(seconds);
-			this._globalTrigger(elem, "change"); //move markers
+			this._simulateEvent(elem, "change"); //move markers
 		},
 
-		_globalTrigger: function(elem, evnt) {
+		_simulateEvent: function(elem, evnt) {
 			var e = document.createEvent("HTMLEvents");
 			e.initEvent(evnt, true, true);
-			elem.dispatchEvent(e); //move markers
+			elem.dispatchEvent(e);
 		},
 
 		_fillForm: function() {
@@ -167,32 +183,34 @@
 			console.log("Run Highlighter: seeking to " + this.start_time);
 		},
 
-		_seekToStartLoop: function(delay) {
+		_readyToSeekLoop: function(callback, delay) {
+			if (!callback)
+				throw "Undefined callback argument";
 			if (isNaN(this.start_time) || this.start_time <= 0)
 				return;
 
 			var self = this;
 			setTimeout(function () {
 				if (self.getPlayerCurrentTime() > 0)
-					self._seekToStart();
+					callback();
 				else
-					self._seekToStartLoop();
+					self._readyToSeekLoop(callback);
 			}, delay !== undefined ? delay : 250);
 		},
 
-		//waits for the player to load to do stuff (flash only)
-		_playerReadyLoop: function(delay) {
+		//waits for the player to load (only use for flash)
+		_playerReadyLoop: function(callback, delay) {
+			if (!callback)
+				throw "Undefined callback argument";
 			if (isNaN(this.start_time) || isNaN(this.end_time))
 				return;
 
 			var self = this;
 			setTimeout(function() {
-				if (self.isPlayerReady()) {
-					console.log("Run Highlighter: player ready, started filling & seeking");
-					self._fillForm();
-					self._seekToStartLoop(0);
-				} else
-					self._playerReadyLoop();
+				if (self.isPlayerReady())
+					callback();
+				else
+					self._playerReadyLoop(callback);
 			}, delay !== undefined ? delay : 250);
 		}
 	};
@@ -231,8 +249,8 @@
 
 			if (/^\/[^\/]+\/manager\/[^\/]+\/highlight\/?$/.test(window.location.pathname)) {
 				waitForKeyElements("form.highlight-form fieldset h4:eq(0)", function() {
-					var link = $('<a href="' + rh_url + '">use Run Highlighter</a>');
-					$("form.highlight-form fieldset h4:eq(0)").append("<br/>or ").append(link);
+					var link = $('<br/>or <a href="' + rh_url + '">use Run Highlighter</a>');
+					$("form.highlight-form fieldset h4:eq(0)").append(link);
 				}, true);
 			} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights)\/?$/.test(window.location.pathname)
 				|| /^\/[^\/]+\/profile(\/[^\/]+)?\/?$/.test(window.location.pathname)) {
