@@ -351,6 +351,7 @@ var RunHighlighter = RunHighlighter || {
 		buffer: 7
 	},
 	_xhr: new XMLHttpRequest(),
+	_lastApiCallDate: null,
 
 	_format_time: function(seconds, decimals) {
 		decimals = decimals || 0;
@@ -376,6 +377,7 @@ var RunHighlighter = RunHighlighter || {
 	_twitchApiCall: function(str, callback){
 		var self = this;
 		var listener = function() {
+			self._lastApiCallDate = Date.now();
 			self._xhr.removeEventListener("loadend", listener);
 			callback();
 		};
@@ -390,9 +392,19 @@ var RunHighlighter = RunHighlighter || {
 		var url = str.indexOf("http") !== 0
 			? "https://api.twitch.tv/kraken/" + str
 			: str;
-		this._xhr.open("GET", url);
-		this._xhr.setRequestHeader('Client-ID', "5vm04dvyqpvledw9nknkgu1ex2tzyvs");
-		this._xhr.send();
+
+		var delay = 0;
+		var timeSinceLastCall = Date.now() - this._lastApiCallDate;
+		if (timeSinceLastCall < 1000) {
+			delay = 1000 - timeSinceLastCall;
+			console.log("Run Highlighter: Twitch Api call delayed by " + delay + " ms");
+		}
+
+		setTimeout(function() {
+			self._xhr.open("GET", url);
+			self._xhr.setRequestHeader('Client-ID', "5vm04dvyqpvledw9nknkgu1ex2tzyvs");
+			self._xhr.send();
+		}, delay);
 	},
 
 	searchVideo: function(vid, run){
@@ -464,7 +476,7 @@ var RunHighlighter = RunHighlighter || {
 			else
 				callback(null, requestInfo);
 		};
-		this._twitchApiCall("channels/" + channel + "/videos?broadcasts=true", listener);
+		this._twitchApiCall("channels/" + channel + "/videos?broadcasts=true&limit=30", listener);
 	},
 
 	_videoToHighlight: function(channel, video, run) {
