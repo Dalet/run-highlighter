@@ -11,14 +11,23 @@ div#tab-content {
 	margin-bottom: 15px;
 }
 
+.title-subtext {
+	margin-left: 10px;
+	font-size: 12px;
+}
+
+div.row.page-header{
+	padding-bottom: 2px;
+}
+
 @media (max-width: 767px) {
 	.page-header {
-		margin-top: 0px;
+		margin-top: 5px;
+		text-align: center;
 	}
 
 	.page-header h1 {
-		margin-top: 5px;
-		text-align: center;
+		margin-top: 0px;
 	}
 }
 
