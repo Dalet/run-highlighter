@@ -416,7 +416,7 @@ var RunHighlighter = RunHighlighter || {
 		return false;
 	},
 
-	searchRun: function(channel, run, callback){
+	searchRun: function(channel, run, callback, progressCallback){
 		var self = this;
 		var videoCount = 0;
 		var all_parts_found = false;
@@ -471,8 +471,15 @@ var RunHighlighter = RunHighlighter || {
 					? self._videosToHighlights(channel, video, run)
 					: self._videoToHighlight(channel, video, run);
 				callback(highlights, requestInfo);
-			} else if (!cancel && ret._total > videoCount)
+			} else if (!cancel && ret._total > videoCount) {
+				if (progressCallback) {
+					progressCallback({
+						current: videoCount,
+						total: ret._total
+					});
+				}
 				self._twitchApiCall(ret._links.next, listener);
+			}
 			else
 				callback(null, requestInfo);
 		};

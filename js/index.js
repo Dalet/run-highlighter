@@ -269,7 +269,7 @@
 		}
 
 		searching = true;
-		setErrMsg("Searching...", "alert-info");
+		setErrMsg('Searching...<span id="search-progress"></span>', "alert-info");
 
 		var run = getSelectedRun();
 		if (run === undefined || run === null) {
@@ -423,6 +423,9 @@
 					$("div#error-message").append(text);
 					makeDownloadLink($("#error-message .addon-download-link"));
 				}
+			},
+			function(progress){
+				$("#search-progress").text(" (" + progress.current + "/" + progress.total + " videos)");
 			});
 		} catch (e) {
 			console.error("Run Highlighter: " + e);
