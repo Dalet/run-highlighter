@@ -277,6 +277,15 @@
 					var link = $('<li><a href="' + rh_url +'">Run Highlighter</a></li>');
 					$("div .directory_header li:last()").after(link);
 				}, true);
+			} else if (/^\/[^\/]+\/videos\/[^\/]+$/.test(window.location.pathname)) {
+				var blacklist = ["settings", "directory"];
+				if (blacklist.indexOf(channel) < 0) {
+					waitForKeyElements("div.filter-bar", function() {
+						var link = $('<div class="run-highlighter-link" style="font-size: 13px;">'
+							+ '<a href="' + rh_url +'">Run Highlighter</a></div>');
+						$("div.filter-bar").append(link);
+					}, true);
+				}
 			}
 		}, 750);
 	});
