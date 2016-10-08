@@ -280,10 +280,10 @@
 			} else if (/^\/[^\/]+\/videos\/[^\/]+$/.test(window.location.pathname)) {
 				var blacklist = ["settings", "directory"];
 				if (blacklist.indexOf(channel) < 0) {
-					waitForKeyElements("div.filter-bar", function() {
-						var link = $('<div class="run-highlighter-link" style="font-size: 13px;">'
+					waitForKeyElements("div.filter-bar .filter-bar__left", function() {
+						var link = $('<div class="run-highlighter-link" style="display: flex; align-items: center;">'
 							+ '<a href="' + rh_url +'">Run Highlighter</a></div>');
-						$("div.filter-bar").append(link);
+						$("div.filter-bar .filter-bar__left:last()").append(link);
 					}, true);
 				}
 			}
