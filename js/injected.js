@@ -1,6 +1,10 @@
 (function() {
 	if (document.body.hasAttribute("run-highlighter-addon"))
+	{
+		console.error("Run Highlighter: already injected");
 		return;
+	}
+
 	document.body.setAttribute("run-highlighter-addon", "");
 	console.log("Run Highlighter: injected");
 
@@ -268,16 +272,11 @@
 					var link = $('<br/>or <a href="' + rh_url + '">use Run Highlighter</a>');
 					$("form.highlight-form fieldset h4:eq(0)").append(link);
 				}, true);
-			} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights)\/?$/.test(window.location.pathname)
-				|| /^\/[^\/]+\/profile(\/[^\/]+)?\/?$/.test(window.location.pathname)) {
-				// prevent injecting in pages that aren't channels profile
-				var blacklist = ["settings"];
-				if (blacklist.indexOf(channel) < 0) {
-					waitForKeyElements("div .directory_header li:eq(1)", function() {
-						var link = $('<li><a href="' + rh_url +'">Run Highlighter</a></li>');
-						$("div .directory_header li:eq(1)").after(link);
-					}, true);
-				}
+			} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights|uploads)\/?$/.test(window.location.pathname)) {
+				waitForKeyElements("div .directory_header li:eq(1)", function() {
+					var link = $('<li><a href="' + rh_url +'">Run Highlighter</a></li>');
+					$("div .directory_header li:last()").after(link);
+				}, true);
 			}
 		}, 750);
 	});
