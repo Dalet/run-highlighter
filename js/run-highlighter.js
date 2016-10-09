@@ -348,10 +348,58 @@ SegmentAttempt.prototype.TimeUntil = function() {
 */
 var RunHighlighter = RunHighlighter || {
 	settings: {
-		buffer: 7
+		_buffer_default: 7,
+		buffer: this._buffer_default,
+
+		_fullRunTitle_default: "$game $category speedrun in $gametime IGT[RT!=GT] ($realtime RTA)[/RT!=GT]",
+		fullRunTitle: this._fullRunTitle_default,
+
+		_segmentTitle_default : "$game $category - $segment in $gametime IGT[RT!=GT] ($realtime RTA)[/RT!=GT]",
+		segmentTitle: this._segmentTitle_default,
+
+		_description_default: "",
+		description: this._description_default,
+
+		_load: function() {
+			if (typeof(Storage) === "undefined")
+				return;
+
+			this._load_item("fullRunTitle", "full-run-title-format", this._fullRunTitle_default);
+			this._load_item("segmentTitle", "segment-title-format", this._segmentTitle_default);
+			this._load_item("description", "description-format", this._description_default);
+			this._load_int_item("buffer", "buffer", this._buffer_default);
+		},
+
+		_load_item: function(key, storageKey, defaultVal) {
+			if (typeof(Storage) === "undefined")
+				throw "Storage is undefined";
+
+			var value = localStorage.getItem(storageKey);
+
+			if (value !== null && value.trim() !== "") {
+				var val = value.trim();
+				this[key] = val;
+			} else {
+				localStorage.setItem(storageKey, "");
+				if (defaultVal !== undefined) {
+					this[key] = defaultVal;
+				}
+			}
+		},
+
+		_load_int_item: function(key, storageKey, defaultVal) {
+			this._load_item(key, storageKey, defaultVal);
+			var val = parseInt(this[key]);
+			this[key] = !isNaN(val) ? val : defaultVal;
+		}
 	},
+
 	_xhr: new XMLHttpRequest(),
 	_lastApiCallDate: null,
+
+	init: function() {
+		this.settings._load();
+	},
 
 	_format_time: function(seconds, decimals) {
 		decimals = decimals || 0;
@@ -508,19 +556,33 @@ var RunHighlighter = RunHighlighter || {
 
 		var duration = run.ended.diff(run.started) / 1000;
 		var link = "https://www.twitch.tv/" + channel + "/manager/" + video._id + "/highlight";
-		var title = run.getTitle();
+
+		var format = run.type === "segment"
+			? this.settings.segmentTitle
+			: this.settings.fullRunTitle;
+		var title = this.formatText(format, run);
+		var description = this.formatText(this.settings.description, run);
 
 		return {
 			"title": title,
+			"description": description,
 			"start_time": start_time,
 			"end_time": end_time,
 			"link": link,
 			"duration": duration,
 			"part": part,
 			"get_addon_link": function() {
+				var tit = this.title.length > 0
+					? "&title=" + encodeURIComponent(window.btoa(this.title))
+					: "";
+
+				var desc = this.description.length > 0
+					? "&desc=" + encodeURIComponent(window.btoa(this.description))
+					: "";
+
 				return this.link + "?start_time=" + this.start_time
 					+ "&end_time=" + this.end_time
-					+ "&title="+ encodeURIComponent(window.btoa(this.title));
+					+ tit + desc;
 			}
 		};
 	},
@@ -549,5 +611,51 @@ var RunHighlighter = RunHighlighter || {
 			return "first";
 		else
 			return null;
+	},
+
+	formatText: function(raw, run) {
+		if (raw === undefined || raw === null)
+			throw "raw param is undefined";
+
+		if (!run)
+			throw "run param is undefined";
+
+		var useIgt = run.igt !== null && run.rta.asMilliseconds() !== run.igt.asMilliseconds()
+		var regex = /\[RT!=GT\](.*?)\[\/RT!=GT\]/;
+		var match;
+		while ((match = regex.exec(raw)) !== null) {
+			if (useIgt) {
+				raw = raw.replace("[RT!=GT]", "");
+				raw = raw.replace("[/RT!=GT]", "");
+			} else
+				raw = raw.replace(match[0], "");
+		}
+
+		var rtStr = RunHighlighter._format_time(run.rta.asSeconds());
+		var gtStr = useIgt
+			? RunHighlighter._format_time(run.igt.asSeconds())
+			: rtStr;
+
+		var segmentName = run.type === "segment"
+			? run.segmentName
+			: "";
+
+		var keywords = {
+			"$realtime": rtStr,
+			"$gametime": gtStr,
+			"$game": run.gameName,
+			"$category": run.categoryName,
+			"$segment": segmentName,
+		};
+
+		var escapeRegExp = function(unescapedRegExp) {
+			return unescapedRegExp.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+		}
+
+		for (key in keywords) {
+			raw = raw.replace(new RegExp(escapeRegExp(key), 'g'), keywords[key]);
+		}
+
+		return raw;
 	}
 };

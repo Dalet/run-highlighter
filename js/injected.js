@@ -19,12 +19,19 @@
 			this.end_time = parseInt(urlVars.end_time);
 			this.automate = urlVars.automate === "true" || parseInt(urlVars.automate) === 1;
 			this.title = null;
+			this.description = null;
 			this._player = null;
 
 			if (urlVars.title !== undefined && urlVars.title.length > 0) {
 				try {
 					this.title = window.atob(decodeURIComponent(urlVars.title));
 				} catch (e) { this.title = null; }
+			}
+
+			if (urlVars.desc !== undefined && urlVars.desc.length > 0) {
+				try {
+					this.description = window.atob(decodeURIComponent(urlVars.desc));
+				} catch (e) { this.description = null; }
 			}
 
 			var self = this;
@@ -160,6 +167,9 @@
 
 			if (this.title !== null)
 				$("input[name=title]").val(this.title);
+
+			if (this.description !== null)
+				$("textarea[name=description]").val(this.description);
 
 			$("input[name=tag_list]").val("speedrun, speedrunning");
 

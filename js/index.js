@@ -17,6 +17,7 @@
 		e.preventDefault();
 	});
 
+	RunHighlighter.init();
 	var attempts = [];
 	var segments = [];
 	var segmentAttempts = null;
@@ -267,6 +268,8 @@
 		if (typeof(Storage) !== "undefined") {
 			localStorage.setItem("channel", channel);
 		}
+
+		RunHighlighter.settings._load();
 
 		searching = true;
 		setErrMsg('Searching...<span id="search-progress"></span>', "alert-info");
