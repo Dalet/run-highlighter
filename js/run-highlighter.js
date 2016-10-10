@@ -351,16 +351,16 @@ var RunHighlighter = RunHighlighter || {
 		_buffer_default: 7,
 		buffer: this._buffer_default,
 
-		_fullRunTitle_default: "$game $category speedrun in $gametime IGT[RT!=GT] ($realtime RTA)[/RT!=GT]",
+		_fullRunTitle_default: "$game $category speedrun in $gametime [ifNotIGT]RTA[/ifNotIGT][ifIGT]IGT ($realtime RTA)[/ifIGT]",
 		fullRunTitle: this._fullRunTitle_default,
 
-		_segmentTitle_default : "$game $category - $segment in $gametime IGT[RT!=GT] ($realtime RTA)[/RT!=GT]",
+		_segmentTitle_default : "$game $category - $segment in $gametime [ifNotIGT]RTA[/ifNotIGT][ifIGT]IGT ($realtime RTA)[/ifIGT]",
 		segmentTitle: this._segmentTitle_default,
 
 		_description_default: "",
 		description: this._description_default,
 
-		_load: function() {
+		load: function() {
 			if (typeof(Storage) === "undefined")
 				return;
 
@@ -391,6 +391,24 @@ var RunHighlighter = RunHighlighter || {
 			this._load_item(key, storageKey, defaultVal);
 			var val = parseInt(this[key]);
 			this[key] = !isNaN(val) ? val : defaultVal;
+		},
+
+		_set_item: function(key, storageKey, value) {
+			if (typeof(Storage) === "undefined")
+				throw "Storage is undefined";
+
+			if (!value)
+				value = "";
+
+			value = value.trim();
+			localStorage.setItem(storageKey, value);
+			this[key] = value;
+		},
+
+		_set_int_item: function(key, storageKey, value) {
+			var val = value ? String(value) : "";
+			this._set_item(key, storageKey, val);
+			this[key] = val;
 		}
 	},
 
@@ -398,7 +416,7 @@ var RunHighlighter = RunHighlighter || {
 	_lastApiCallDate: null,
 
 	init: function() {
-		this.settings._load();
+		this.settings.load();
 	},
 
 	_format_time: function(seconds, decimals) {
@@ -564,7 +582,16 @@ var RunHighlighter = RunHighlighter || {
 		var description = this.formatText(this.settings.description, run);
 
 		return {
-			"title": title,
+			"run": run,
+			"getTitle": function() {
+				var format = this.run.type === "segment"
+					? RunHighlighter.settings.segmentTitle
+					: RunHighlighter.settings.fullRunTitle;
+				return RunHighlighter.formatText(format, this.run);
+			},
+			"getDescription": function() {
+				return RunHighlighter.formatText(RunHighlighter.settings.description, run);
+			},
 			"description": description,
 			"start_time": start_time,
 			"end_time": end_time,
@@ -572,12 +599,14 @@ var RunHighlighter = RunHighlighter || {
 			"duration": duration,
 			"part": part,
 			"get_addon_link": function() {
-				var tit = this.title.length > 0
-					? "&title=" + encodeURIComponent(window.btoa(this.title))
+				var tit = this.getTitle();
+				tit = tit.length > 0
+					? "&title=" + encodeURIComponent(window.btoa(tit))
 					: "";
 
-				var desc = this.description.length > 0
-					? "&desc=" + encodeURIComponent(window.btoa(this.description))
+				var desc = this.getDescription();
+				desc = desc.length > 0
+					? "&desc=" + encodeURIComponent(window.btoa(desc))
 					: "";
 
 				return this.link + "?start_time=" + this.start_time
@@ -621,12 +650,21 @@ var RunHighlighter = RunHighlighter || {
 			throw "run param is undefined";
 
 		var useIgt = run.igt !== null && run.rta.asMilliseconds() !== run.igt.asMilliseconds()
-		var regex = /\[RT!=GT\](.*?)\[\/RT!=GT\]/;
+		var ifIGTregex = /\[ifIGT\](.*?)\[\/ifIGT\]/;
 		var match;
-		while ((match = regex.exec(raw)) !== null) {
+		while ((match = ifIGTregex.exec(raw)) !== null) {
 			if (useIgt) {
-				raw = raw.replace("[RT!=GT]", "");
-				raw = raw.replace("[/RT!=GT]", "");
+				raw = raw.replace("[ifIGT]", "");
+				raw = raw.replace("[/ifIGT]", "");
+			} else
+				raw = raw.replace(match[0], "");
+		}
+
+		var ifNotIGTregex = /\[ifNotIGT\](.*?)\[\/ifNotIGT\]/;
+		while ((match = ifNotIGTregex.exec(raw)) !== null) {
+			if (!useIgt) {
+				raw = raw.replace("[ifNotIGT]", "");
+				raw = raw.replace("[/ifNotIGT]", "");
 			} else
 				raw = raw.replace(match[0], "");
 		}

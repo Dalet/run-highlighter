@@ -11,6 +11,16 @@ div#tab-content {
 	margin-bottom: 15px;
 }
 
+#run-select {
+	display: none;
+}
+
+.form-group p.help-block {
+	margin-left: 5px;
+}
+
+/* Page Header
+-------------------------------------------------- */
 .title-subtext {
 	margin-left: 10px;
 	font-size: 12px;
@@ -31,10 +41,13 @@ div.row.page-header{
 	}
 }
 
+
+
 .col-centered {
 	float: none;
 	margin: 0 auto;
 }
+
 
 /* Sticky footer styles
 -------------------------------------------------- */
@@ -59,6 +72,7 @@ body {
 }
 
 
+
 /* Custom page CSS
 -------------------------------------------------- */
 /* Not required for template or sticky footer method. */
@@ -71,6 +85,7 @@ body {
 .container .text-muted {
   margin: 20px 0;
 }
+
 
 /* Override some stuff from the Superhero bootstrap theme  */
 
@@ -105,8 +120,4 @@ ul.dropdown-menu .bg-warning:hover, ul.dropdown-menu .bg-warning:focus{
 
 .text-muted {
 	color: #a9a9a9;
-}
-
-input, textarea {
-    color: inherit;
 }

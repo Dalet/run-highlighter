@@ -18,25 +18,30 @@
 	});
 
 	RunHighlighter.init();
-	var attempts = [];
-	var segments = [];
-	var segmentAttempts = null;
-	var runsCombobox = $('select[name="run"]');
+	window.attempts = [];
+	window.segments = [];
+	window.segmentAttempts = null;
+	window.runsCombobox = $('select[name="run"]');
 	var segmentsNameCb = $('select[name="segmentName"]');
-	var segmentsIdCb = $('select[name="segmentId"]');
+	window.segmentsIdCb = $('select[name="segmentId"]');
 	var errorMessage = $("#error-message");
 	var runInfo = $("#run-info");
 	var segInfo = $("#segment-info");
 	var searching = false;
 	var segmentTabLoaded = false;
-	var redirect_interval = null;
+	window.redirect_interval = null;
 
-	var getUrlVars = function() {
+	function getUrlVars() {
 		var vars = {};
 		var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
 			vars[key] = value;
 		});
 		return vars;
+	}
+
+	window.formatChanged = function() {
+		cancelSearch();
+		setErrMsg("");
 	};
 
 	var setErrMsg = function(msg, alert)
@@ -57,18 +62,18 @@
 		elem.slideDown(100, "swing");
 	};
 
-	var getSelectedRun = function(what) {
+	window.getSelectedRun = function(what) {
 		if (what === "run"
 			|| (what === undefined && $('ul#tab-links li:eq(0)').hasClass("active")))
 		{
-			if (attempts.length === 0) return null;
-			return attempts[runsCombobox[0].selectedIndex];
+			if (window.attempts.length === 0) return null;
+			return window.attempts[window.runsCombobox[0].selectedIndex];
 		}
 		else if (what === "segment"
 			|| (what === undefined && $('ul#tab-links li:eq(1)').hasClass("active")))
 		{
-			if (segmentAttempts.length === 0) return null;
-			return segmentAttempts[segmentsIdCb[0].selectedIndex];
+			if (!window.segmentAttempts || window.segmentAttempts.length === 0) return null;
+			return window.segmentAttempts[window.segmentsIdCb[0].selectedIndex];
 		}
 	};
 
@@ -97,7 +102,7 @@
 		segmentsNameCb.selectpicker('refresh');
 	};
 
-	var cancelSearch = function() {
+	function cancelSearch() {
 		if (RunHighlighter._xhr && RunHighlighter._xhr.readyState !== XMLHttpRequest.UNSENT &&
 			RunHighlighter._xhr.readyState !== XMLHttpRequest.DONE) {
 				console.log("Run Highlighter: search aborted");
@@ -107,7 +112,7 @@
 		if (redirect_interval !== null)
 			window.clearInterval(redirect_interval);
 		redirect_interval = null;
-	};
+	}
 
 	runsCombobox.change(function(){
 		cancelSearch();
@@ -269,7 +274,7 @@
 			localStorage.setItem("channel", channel);
 		}
 
-		RunHighlighter.settings._load();
+		RunHighlighter.settings.load();
 
 		searching = true;
 		setErrMsg('Searching...<span id="search-progress"></span>', "alert-info");

@@ -18,6 +18,7 @@
   <link href="bootstrap/css/bootstrap.superhero.min.css" rel="stylesheet">
   <link rel="stylesheet" href="bootstrap/css/bootstrap-select.min.css">
   <link href="css/index.css" rel="stylesheet">
+  <link href="css/settings.css" rel="stylesheet">
 
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file://  -->
@@ -56,53 +57,104 @@
 <div class="container">
 
   <div class="row page-header">
-    <h1>Run Highlighter</h1>
-    <p class="title-subtext">Find and highlight your speedrun VODs</p>
+    <div>
+      <h1>Run Highlighter</h1>
+      <p class="title-subtext">Find and highlight your speedrun VODs</p>
+    </div>
+
+    <div id="settings-link-container">
+      <a href="#settings" id="settings-link">Settings</a>
+    </div>
   </div>
 
-  <div class="form-group">
-    <label for="channel">Channel:</label>
-    <input id="channel" type="text" class="form-control" placeholder="Twitch Username">
-    <p class="help-block hidden"></p>
-  </div>
+  <div id="settings-container">
 
-  <div class="form-group center-block">
-    <label for="splits">Splits file:</label>
-    <input type="file" id="splits" class="form-control">
-    <p class="help-block"><a href="http://livesplit.org/" target="_blank">LiveSplit</a> only</p>
-  </div>
-
-  <div style="display: none;" id="run-select">
-
-    <ul class="nav nav-tabs" id="tab-links">
-      <li class="active"><a href="#tab1">Runs</a></li>
-      <li><a href="#tab2">Segments</a></li>
-    </ul>
-
-    <div id="tab-content">
-      <div id="tab1" class="tab active">
-        <div class="form-group">
-        <label for="run">Pick a run:</label>
-        <select class="selectpicker form-control" name="run"></select>
-        <p class="help-block" id="run-info"></p>
-        </div>
+    <h4>Settings</h4>
+    <div>
+      <p><a href="https://github.com/Dalet/run-highlighter/wiki/Formatting-syntax" target="_blank">Formatting documentation</a></p>
+      <div class="form-group">
+        <label for="setting-title-format-full-run">Title format (full run):</label>
+        <input name="setting-title-format-full-run" type="text" class="form-control">
+        <p class="help-block">
+          Preview:  <span class="format-preview" id="setting-title-format-full-run-preview"></span>
+        </p>
       </div>
 
-      <div id="tab2" class="tab">
-        <div class="form-group">
-          <label for="segmentName">Segment:</label>
-          <select class="selectpicker form-control" name="segmentName"></select>
-        </div>
-        <div class="form-group">
-          <label for="segmentId">Which time?</label>
-          <select class="selectpicker form-control" name="segmentId"></select>
-          <p class="help-block" id="segment-info"></p>
-        </div>
+      <div class="form-group">
+        <label for="setting-title-format-segment">Title format (segment):</label>
+        <input name="setting-title-format-segment" type="text" class="form-control">
+        <p class="help-block">
+          Preview:  <span class="format-preview" id="setting-title-format-segment-preview"></span>
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="setting-description">Description format:</label>
+        <textarea rows="2" name="setting-description" class="form-control"></textarea>
+        <p class="help-block">
+          Preview:  <div class="format-preview" id="setting-description-format-preview"></div>
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="setting-buffer">Buffer time:</label>
+        <input name="setting-buffer" type="number" class="form-control" min="-99" max="99">
+        <p class="help-block">
+          Buffer time at the start and end. Changing this setting is not recommended. (Default: 7)
+        </p>
       </div>
     </div>
-    <button type="button" id="search-button" class="btn btn-primary center-block">Search</button>
+
   </div>
-  <div class="hidden" id="error-message"></div>
+
+  <div id="main-body">
+
+    <div class="form-group">
+      <label for="channel">Channel:</label>
+      <input required id="channel" type="text" class="form-control" placeholder="Twitch Username">
+      <p class="help-block hidden"></p>
+    </div>
+
+    <div class="form-group center-block">
+      <label for="splits">Splits file:</label>
+      <input type="file" id="splits" class="form-control">
+      <p class="help-block"><a href="http://livesplit.org/" target="_blank">LiveSplit</a> only</p>
+    </div>
+
+    <div id="run-select">
+
+      <ul class="nav nav-tabs" id="tab-links">
+        <li class="active"><a href="#tab1">Runs</a></li>
+        <li><a href="#tab2">Segments</a></li>
+      </ul>
+
+      <div id="tab-content">
+        <div id="tab1" class="tab active">
+          <div class="form-group">
+          <label for="run">Pick a run:</label>
+          <select class="selectpicker form-control" name="run"></select>
+          <p class="help-block" id="run-info"></p>
+          </div>
+        </div>
+
+        <div id="tab2" class="tab">
+          <div class="form-group">
+            <label for="segmentName">Segment:</label>
+            <select class="selectpicker form-control" name="segmentName"></select>
+          </div>
+          <div class="form-group">
+            <label for="segmentId">Which time?</label>
+            <select class="selectpicker form-control" name="segmentId"></select>
+            <p class="help-block" id="segment-info"></p>
+          </div>
+        </div>
+      </div>
+      <button type="button" id="search-button" class="btn btn-primary center-block">Search</button>
+    </div>
+    <div class="hidden" id="error-message"></div>
+
+  </div>
+
 </div>
 
 <footer class="footer">
@@ -126,6 +178,7 @@
 <script type="text/javascript" src="js/moment.js"></script>
 <script type="text/javascript" src="js/run-highlighter.js"></script>
 <script type="text/javascript" src="js/index.js"></script>
+<script type="text/javascript" src="js/settings.js"></script>
 
 </body>
 </html>
