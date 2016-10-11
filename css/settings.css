@@ -49,3 +49,11 @@ div.format-preview {
 	min-height: 25px;
 	margin-top: -5px;
 }
+
+.radio-inline-group {
+	display: flex;
+}
+
+.radio-inline-group label:first-child {
+	margin-right: 15px;
+}
