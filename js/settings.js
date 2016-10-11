@@ -42,6 +42,7 @@
 	var inputTitleRun = $("input[name=setting-title-format-full-run]");
 	var inputTitleSegment = $("input[name=setting-title-format-segment]");
 	var inputDescription = $("textarea[name=setting-description]");
+	var inputTruncated = $("input[name=setting-truncated]");
 
 	// defaults in placeholder
 	inputBuffer.attr("placeholder", RunHighlighter.settings._buffer_default);
@@ -53,11 +54,15 @@
 	inputTitleRun.val(localStorage.getItem("full-run-title-format"));
 	inputTitleSegment.val(localStorage.getItem("segment-title-format"));
 	inputDescription.val(localStorage.getItem("description-format"));
+	inputTruncated.filter("input[value=false]").prop('checked', !RunHighlighter.settings.truncate);
+	inputTruncated.filter("input[value=true]").prop('checked', RunHighlighter.settings.truncate);
 
-	inputBuffer.on('input', function() {
+	inputBuffer.on('input', function(e) {
 		var value = $(this).val().trim();
 		RunHighlighter.settings._set_int_item("buffer", "buffer", value);
 		RunHighlighter.settings.load();
+		if (e.originalEvent && typeof window.formatChanged === "function")
+			window.formatChanged();
 	});
 
 	function updatePreviews() {
@@ -86,7 +91,7 @@
 			runExample.segmentName = "Level 1";
 			runExample.gameName = "Zelda"
 			runExample.categoryName = "Any%";
-			runExample.rta = moment.duration(100114);
+			runExample.rta = moment.duration(100714);
 			runExample.igt = moment.duration(94737);
 		}
 
@@ -124,6 +129,15 @@
 		RunHighlighter.settings._set_item("description", "description-format", value);
 		RunHighlighter.settings.load();
 		updatePreview(RunHighlighter.settings.description, $("#setting-description-format-preview"));
+		if (e.originalEvent && typeof window.formatChanged === "function")
+			window.formatChanged();
+	});
+
+	inputTruncated.on('change', function(e) {
+		var value = $(this).val() === "true";
+		RunHighlighter.settings._set_bool_item("truncate", "truncate", value);
+		RunHighlighter.settings.load();
+		updatePreviews();
 		if (e.originalEvent && typeof window.formatChanged === "function")
 			window.formatChanged();
 	});

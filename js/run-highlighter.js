@@ -351,6 +351,9 @@ var RunHighlighter = RunHighlighter || {
 		_buffer_default: 7,
 		buffer: this._buffer_default,
 
+		_truncate_default: false,
+		truncate: this._truncate_default,
+
 		_fullRunTitle_default: "$game $category speedrun in $gametime [ifNotIGT]RTA[/ifNotIGT][ifIGT]IGT ($realtime RTA)[/ifIGT]",
 		fullRunTitle: this._fullRunTitle_default,
 
@@ -368,6 +371,7 @@ var RunHighlighter = RunHighlighter || {
 			this._load_item("segmentTitle", "segment-title-format", this._segmentTitle_default);
 			this._load_item("description", "description-format", this._description_default);
 			this._load_int_item("buffer", "buffer", this._buffer_default);
+			this._load_bool_item("truncate", "truncate", this._truncate_default);
 		},
 
 		_load_item: function(key, storageKey, defaultVal) {
@@ -393,6 +397,14 @@ var RunHighlighter = RunHighlighter || {
 			this[key] = !isNaN(val) ? val : defaultVal;
 		},
 
+		_load_bool_item: function(key, storageKey, defaultVal) {
+			this._load_item(key, storageKey, defaultVal);
+			var val = this[key];
+			this[key] = val.length > 0
+				? val === "true"
+				: defaultVal;
+		},
+
 		_set_item: function(key, storageKey, value) {
 			if (typeof(Storage) === "undefined")
 				throw "Storage is undefined";
@@ -407,9 +419,17 @@ var RunHighlighter = RunHighlighter || {
 
 		_set_int_item: function(key, storageKey, value) {
 			var val = value ? String(value) : "";
-			this._set_item(key, storageKey, val);
-			this[key] = val;
+			localStorage.setItem(storageKey, val);
+			if (val.length > 0)
+				this[key] = val;
+		},
+
+		_set_bool_item: function(key, storageKey, value) {
+			var val = value ? "true" : "false";
+			localStorage.setItem(storageKey, val);
+			this[key] = val ? "true" : "false";
 		}
+
 	},
 
 	_xhr: new XMLHttpRequest(),
@@ -434,7 +454,9 @@ var RunHighlighter = RunHighlighter || {
 		if (hours !== "" && minutes < 10)
 			minutes = "0" + minutes;
 
-		seconds = seconds.toFixed(decimals);
+		seconds = this.settings.truncate && decimals == 0
+			? Math.floor(seconds)
+			: seconds.toFixed(decimals);
 		if (seconds < 10)
 			seconds = "0" + seconds;
 		return hours + minutes + ":" + seconds;
