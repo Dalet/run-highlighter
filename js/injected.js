@@ -34,8 +34,13 @@
 				} catch (e) { this.description = null; }
 			}
 
-			var self = this;
-			this._waitForPlayer(function() { self._onPlayerFound(); }, 0);
+			this.isWaitingForPlayer = this.title !== null || this.description !== null
+				|| !isNaN(this.start_time) || !isNaN(this.end_time);
+
+			if (this.isWaitingForPlayer) {
+				var self = this;
+				this._waitForPlayer(function() { self._onPlayerFound(); }, 0);
+			}
 		},
 
 		_onPlayerFound: function() {
@@ -250,9 +255,6 @@
 		return;
 
 	inject("https://dalet.github.io/run-highlighter/js/waitForKeyElements.js", function() {
-		if (/^\/[^\/]+\/manager\/[^\/]+\/highlight\/?$/.test(window.location.pathname))
-			Highlighter.highlight();
-
 		var currentUrl = null;
 
 		setInterval(function() {
@@ -263,6 +265,7 @@
 			var rh_url = "https://dalet.github.io/run-highlighter/?channel=" + channel;
 
 			if (/^\/[^\/]+\/manager\/[^\/]+\/highlight\/?$/.test(window.location.pathname)) {
+				Highlighter.highlight();
 				waitForKeyElements("form.highlight-form fieldset h4:eq(0)", function() {
 					msg = '<div class="run-highlighter-loading-msg" style="'
 						+ 'border: 1px solid rgba(60,60,60,1);' //#4e4e4e
@@ -276,9 +279,9 @@
 						+ '<p style="text-align: right;">seems broken?'
 						+ ' <a href="https://goo.gl/forms/2lyRNy0tl03rqlt82">contact me</a></p>'
 						+ '</div>';
-					if (!isNaN(Highlighter.start_time) || !isNaN(Highlighter.end_time)
-						|| Highlighter.title !== null)
+					if (Highlighter.isWaitingForPlayer)
 						$("form.highlight-form").parent().prepend(msg);
+
 					var link = $('<br/>or <a href="' + rh_url + '">use Run Highlighter</a>');
 					$("form.highlight-form fieldset h4:eq(0)").append(link);
 				}, true);
