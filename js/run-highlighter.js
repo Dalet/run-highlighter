@@ -671,7 +671,7 @@ var RunHighlighter = RunHighlighter || {
 		if (!run)
 			throw "run param is undefined";
 
-		var useIgt = run.igt !== null && run.rta.asMilliseconds() !== run.igt.asMilliseconds()
+		var useIgt = run.igt !== null && run.rta.asMilliseconds() !== run.igt.asMilliseconds();
 		var ifIGTregex = /\[ifIGT\](.*?)\[\/ifIGT\]/;
 		var match;
 		while ((match = ifIGTregex.exec(raw)) !== null) {
@@ -705,7 +705,7 @@ var RunHighlighter = RunHighlighter || {
 			"$gametime": gtStr,
 			"$game": run.gameName,
 			"$category": run.categoryName,
-			"$segment": segmentName,
+			"$segment": segmentName
 		};
 
 		var escapeRegExp = function(unescapedRegExp) {
