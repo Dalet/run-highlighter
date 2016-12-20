@@ -490,6 +490,7 @@ var RunHighlighter = RunHighlighter || {
 
 		setTimeout(function() {
 			self._xhr.open("GET", url);
+			self._xhr.setRequestHeader('Accept', 'application/vnd.twitchtv.v3+json');
 			self._xhr.setRequestHeader('Client-ID', "5vm04dvyqpvledw9nknkgu1ex2tzyvs");
 			self._xhr.send();
 		}, delay);
