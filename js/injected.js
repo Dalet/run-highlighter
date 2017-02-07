@@ -144,18 +144,18 @@
 		_setStartValue: function(seconds) {
 			if (isNaN(seconds))
 				return;
-			var elem = document.querySelector("input.start-time.string");
+			var elem = document.querySelector("input.start-time");
 			elem.value = this._format_time(seconds);
-			$("input[name=start_time]").val(seconds);
+			document.querySelector("input[name=start_time]").value = seconds;
 			this._simulateEvent(elem, "change"); //move markers
 		},
 
 		_setEndValue: function(seconds) {
 			if (isNaN(seconds))
 				return;
-			var elem = document.querySelector("input.end-time.string");
+			var elem = document.querySelector("input.end-time");
 			elem.value = this._format_time(seconds);
-			$("input[name=end_time]").val(seconds);
+			document.querySelector("input[name=end_time]").value = seconds;
 			this._simulateEvent(elem, "change"); //move markers
 		},
 
