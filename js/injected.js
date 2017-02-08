@@ -180,10 +180,10 @@
 
 			if (!isNaN(this.start_time) && !isNaN(this.end_time)) {
 				//click "Describe Highlight"
-				$("form.highlight-form").find("button:eq(0)").click();
+				$("form.highlighter-form > div:eq(0) button").last().click();
 				//click "Create Highlight"
-				if (this.automate === true)
-					$("form.highlight-form").find("button:eq(1)").click();
+				//if (this.automate === true)
+				//	$("form.highlighter-form > div:eq(1) button").last().click();
 			}
 		},
 
