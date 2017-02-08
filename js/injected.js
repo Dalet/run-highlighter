@@ -266,7 +266,7 @@
 
 			if (/^\/[^\/]+\/manager\/[^\/]+\/highlight\/?$/.test(window.location.pathname)) {
 				Highlighter.highlight();
-				waitForKeyElements("form.highlight-form fieldset h4:eq(0)", function() {
+				waitForKeyElements("form.highlighter-form div:eq(0) h4:eq(0)", function() {
 					msg = '<div class="run-highlighter-loading-msg" style="'
 						+ 'border: 1px solid rgba(60,60,60,1);' //#4e4e4e
 						+ 'padding: 10px;'
@@ -280,10 +280,10 @@
 						+ ' <a href="https://goo.gl/forms/2lyRNy0tl03rqlt82">contact me</a></p>'
 						+ '</div>';
 					if (Highlighter.isWaitingForPlayer)
-						$("form.highlight-form").parent().prepend(msg);
+						$("form.highlighter-form").parent().prepend(msg);
 
 					var link = $('<br/>or <a href="' + rh_url + '">use Run Highlighter</a>');
-					$("form.highlight-form fieldset h4:eq(0)").append(link);
+					$("form.highlighter-form div:eq(0) h4:eq(0)").append(link);
 				}, true);
 			} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights|uploads)\/?$/.test(window.location.pathname)) {
 				waitForKeyElements("div .directory_header li:eq(1)", function() {
