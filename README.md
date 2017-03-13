@@ -1,8 +1,9 @@
 # Run Highlighter
 A web app that finds your runs in your Twitch past broadcasts.
 
-## Website
 https://dalet.github.io/run-highlighter/
+
+![screenshot](http://i.imgur.com/Hb0o6Ob.png)
 
 ## Features
 * Finds in which VOD and at which timestamp your runs or segments started and ended
