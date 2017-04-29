@@ -433,6 +433,8 @@ var RunHighlighter = RunHighlighter || {
 	},
 
 	_xhr: new XMLHttpRequest(),
+	_apiTimeoutHandle: null,
+	_searchCancellationRequested: false,
 	_lastApiCallDate: null,
 
 	init: function() {
@@ -466,10 +468,12 @@ var RunHighlighter = RunHighlighter || {
 		var self = this;
 		var listener = function() {
 			self._lastApiCallDate = Date.now();
-			self._xhr.removeEventListener("loadend", listener);
+			self._xhr.onloadend = null;
+			if (self._searchCancellationRequested)
+				return;
 			callback();
 		};
-		this._xhr.addEventListener("loadend", listener);
+		this._xhr.onloadend = listener;
 
 		//prevent caching
 		if (str.indexOf("?") >= 0)
@@ -488,12 +492,28 @@ var RunHighlighter = RunHighlighter || {
 			console.log("Run Highlighter: Twitch Api call delayed by " + delay + " ms");
 		}
 
-		setTimeout(function() {
+		this._apiTimeoutHandle = window.setTimeout(function() {
+			if (self._searchCancellationRequested)
+				return;
+
 			self._xhr.open("GET", url);
 			self._xhr.setRequestHeader('Accept', 'application/vnd.twitchtv.v3+json');
 			self._xhr.setRequestHeader('Client-ID', "5vm04dvyqpvledw9nknkgu1ex2tzyvs");
 			self._xhr.send();
 		}, delay);
+	},
+
+	cancelSearch: function() {
+		if (!this._xhr || this._searchCancellationRequested)
+			return;
+
+		this._searchCancellationRequested = true;
+		this._xhr.abort();
+		if (this._apiTimeoutHandle) {
+			window.clearTimeout(this._apiTimeoutHandle);
+			this._apiTimeoutHandle = null;
+		}
+		console.log("Run Highlighter: search aborted");
 	},
 
 	searchVideo: function(vid, run){
@@ -509,6 +529,8 @@ var RunHighlighter = RunHighlighter || {
 		var self = this;
 		var videoCount = 0;
 		var all_parts_found = false;
+
+		this._searchCancellationRequested = false;
 
 		var listener = function(event) {
 			var ret = null;

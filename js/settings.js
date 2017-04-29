@@ -72,11 +72,12 @@
 	}
 
 	function updatePreview(raw, previewElem, type) {
+		if (!type)
+			type = "segment";
 
-		var seg = type === "run" ? getSelectedRun("run") : getSelectedRun("segment");
-
-		if (type !== "run" && !seg)
-			seg = getSelectedRun("run");
+		var seg = components.search.getSelectedRun(type);
+		if (!seg && type !== "run")
+			seg = components.search.getSelectedRun("run");
 
 		var runExample = new Run();
 		if (seg) {
