@@ -285,7 +285,7 @@
 					var link = $('<br/>or <a href="' + rh_url + '">use Run Highlighter</a>');
 					$("form.highlighter-form div:eq(0) h4:eq(0)").append(link);
 				}, true);
-			} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights|uploads)\/?$/.test(window.location.pathname)) {
+			} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights|uploads|collections)\/?$/.test(window.location.pathname)) {
 				waitForKeyElements("div .directory_header li:eq(1)", function() {
 					var link = $('<li class="tw-tabs__item"><a href="' + rh_url +'">Run Highlighter</a></li>');
 					$("div .directory_header li:last()").after(link);
