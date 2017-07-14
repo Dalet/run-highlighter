@@ -287,7 +287,7 @@
 				}, true);
 			} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights|uploads)\/?$/.test(window.location.pathname)) {
 				waitForKeyElements("div .directory_header li:eq(1)", function() {
-					var link = $('<li><a href="' + rh_url +'">Run Highlighter</a></li>');
+					var link = $('<li class="tw-tabs__item"><a href="' + rh_url +'">Run Highlighter</a></li>');
 					$("div .directory_header li:last()").after(link);
 				}, true);
 			} else if (/^\/[^\/]+\/videos\/[^\/]+$/.test(window.location.pathname)) {
