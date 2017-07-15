@@ -723,9 +723,17 @@ var RunHighlighter = RunHighlighter || {
 			? run.segmentName
 			: "";
 
+		var localEnded = run.ended.local();
+		var endDay = localEnded.format("DD");
+		var endMonth = localEnded.format("MM");
+		var endYear = localEnded.format("YYYY");
+
 		var keywords = {
 			"$realtime": rtStr,
 			"$gametime": gtStr,
+			"$day": endDay,
+			"$month": endMonth,
+			"$year": endYear,
 			"$game": run.gameName,
 			"$category": run.categoryName,
 			"$segment": segmentName

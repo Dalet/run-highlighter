@@ -75,36 +75,31 @@
 		if (!type)
 			type = "segment";
 
-		var seg = components.search.getSelectedRun(type);
-		if (!seg && type !== "run")
-			seg = components.search.getSelectedRun("run");
+		var selectedRun = components.search.getSelectedRun(type);
+		if (!selectedRun && type !== "run")
+			selectedRun = components.search.getSelectedRun("run");
 
-		var runExample = new Run();
-		if (seg) {
-			runExample.type = seg.type;
-			runExample.segmentName = seg.segmentName;
-			runExample.gameName = seg.gameName;
-			runExample.categoryName = seg.categoryName;
-			runExample.rta = seg.rta;
-			runExample.igt = seg.igt;
-		} else {
-			runExample.type = "segment";
-			runExample.segmentName = "Level 1";
-			runExample.gameName = "Zelda"
-			runExample.categoryName = "Any%";
-			runExample.rta = moment.duration(100714);
-			runExample.igt = moment.duration(94737);
+		if (!selectedRun) {
+			selectedRun = new Run();
+			selectedRun.type = "segment";
+			selectedRun.segmentName = "Level 1";
+			selectedRun.gameName = "Zelda"
+			selectedRun.categoryName = "Any%";
+			selectedRun.rta = moment.duration(100714);
+			selectedRun.igt = moment.duration(94737);
+			selectedRun.isStartedSynced = true;
+			selectedRun.isEndedSynced = true;
+			selectedRun.ended = moment();
+			selectedRun.started = selectedRun.ended.clone().subtract(selectedRun.rta);
 		}
 
-		if (runExample.type === "run") {
-			runExample.segmentName = window.segments && window.segments.length > 0 && window.segments[0].name
+		if (selectedRun.type === "run") {
+			selectedRun.segmentName = window.segments && window.segments.length > 0 && window.segments[0].name
 				? window.segments[0].name
 				: "<Segment Name>";
 		}
 
-		runExample.type = type ? type : "segment";
-
-		previewElem.text(RunHighlighter.formatText(raw, runExample));
+		previewElem.text(RunHighlighter.formatText(raw, selectedRun));
 	}
 
 	inputTitleRun.on('input', function(e) {
