@@ -6,6 +6,20 @@
 
          <RDF:li>
            <RDF:Description>
+             <em:version>1.0.2</em:version>
+             <em:targetApplication>
+               <RDF:Description>
+                 <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+                 <em:minVersion>42.*</em:minVersion>
+                 <em:maxVersion>57.*</em:maxVersion>
+                 <em:updateLink>https://github.com/Dalet/run-highlighter/releases/download/v1.0.2/run-highlighter-1.0.2.xpi</em:updateLink>
+               </RDF:Description>
+             </em:targetApplication>
+           </RDF:Description>
+         </RDF:li>
+
+         <RDF:li>
+           <RDF:Description>
              <em:version>1.0.0</em:version>
              <em:targetApplication>
                <RDF:Description>
