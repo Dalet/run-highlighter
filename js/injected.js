@@ -1,19 +1,111 @@
 (function() {
+	var Logger = {
+		prefix: "Run Highlighter: ",
+
+		log: function(message) {
+			console.log(this.formatMsg(message));
+		},
+
+		error: function(message) {
+			console.error(this.formatMsg(message));
+		},
+
+		formatMsg: function (message) {
+			return this.prefix + message;
+		}
+	};
+
 	if (document.body.hasAttribute("run-highlighter-addon"))
 	{
-		console.error("Run Highlighter: already injected");
+		Logger.error("already injected");
 		return;
 	}
 
 	document.body.setAttribute("run-highlighter-addon", "");
-	console.log("Run Highlighter: injected");
+	Logger.log("injected");
+
+	/*
+		React helper
+	*/
+	var ReactHelper = {
+		getInstance: function(elem) {
+			for (var key in elem) {
+				if (key.startsWith('__reactInternalInstance$')) {
+					return elem[key];
+				}
+			}
+		},
+
+		searchParent: function(instance, predicate) {
+			if (instance._reactInternalFiber)
+				instance = instance._reactInternalFiber;
+
+			var parent = instance.return;
+
+			if (!parent)
+				return null;
+			else if (predicate(parent))
+				return parent;
+
+			return this.searchParent(parent, predicate);
+		},
+
+		searchChildren: function(instance, predicate) {
+			if (instance._reactInternalFiber)
+				instance = instance._reactInternalFiber;
+
+			var target = null;
+			var self = this;
+			this.getChildren(instance).some(function(child) {
+				if (predicate(child))
+				{
+					target = child;
+					return true;
+				}
+
+				var result = self.searchChildren(child, predicate);
+				if (result)
+				{
+					target = result;
+					return true;
+				}
+			});
+
+			return target;
+		},
+
+		getChildren: function(node){
+			if (node._reactInternalFiber)
+				node = node._reactInternalFiber;
+			else if (node instanceof Node)
+				node = this.getInstance(node);
+
+			if (!node)
+				return null;
+
+			const children = [];
+			let child = node.child;
+			while (child) {
+				children.push(child);
+				child = child.sibling;
+			}
+
+			return children;
+		}
+	};
 
 	/*
 	* Highlighter object
 	*/
-	var Highlighter = Highlighter || {
+	var Highlighter = {
+		rootSelector: ".highlighter-page",
+		messageBoxClassName : "run-highlighter-loading-msg",
 
-		highlight: function() {
+		getMessageBox: function() {
+			return document.querySelector("." + this.messageBoxClassName);
+		},
+
+		start: function() {
 			var urlVars = this._getUrlVars();
 			this.start_time = parseInt(urlVars.start_time);
 			this.end_time = parseInt(urlVars.end_time);
@@ -34,83 +126,203 @@
 				} catch (e) { this.description = null; }
 			}
 
-			this.isWaitingForPlayer = this.title !== null || this.description !== null
-				|| !isNaN(this.start_time) || !isNaN(this.end_time);
-
-			if (this.isWaitingForPlayer) {
+			if (this.hasRunHighlighterArgs()) {
 				var self = this;
-				this._waitForPlayer(function() { self._onPlayerFound(); }, 0);
+				this._waitForPageLoad(function() { self._onPageLoaded(); }, 0);
 			}
 		},
 
-		_onPlayerFound: function() {
-			console.log("Run Highlighter: Player found");
-			var self = this;
-			var callback = function() { self._onPlayerReady(); };
-
-			// use a loop for flash
-			if (!this.isPlayerHTML5()) {
-				this._playerReadyLoop(callback, 0);
-				return;
-			}
-
-			// use video events for html5
-			if (this.isPlayerReady()) {
-				console.log("Run Highlighter: player was ready before setting up listener, firing manually");
-				callback();
-			}
-
-			var player = $(this.getPlayer());
-			player.on("loadedmetadata", callback);
-			player.on("seeking", function() {
-				console.log("Run Highlighter: player is seeking to " + player[0].currentTime
-					+ " (t="+ new Date().toISOString().substr(11, 12) + ")");
-			});
+		hasRunHighlighterArgs: function() {
+			return this.title !== null || this.description !== null
+				|| !isNaN(this.start_time) || !isNaN(this.end_time);
 		},
 
-		_onPlayerReady: function() {
-			console.log("Run Highlighter: started filling form & seeking");
-			var self = this;
 
-			$("div.run-highlighter-loading-msg").addClass("hidden");
-			this._fillForm();
-			var delay = this.isPlayerHTML5() ? 500 : 0;
-			this._readyToSeekLoop(function() { self._seekToStart(); }, delay);
-		},
-
-		_waitForPlayer: function(callback, delay) {
+		_waitForPageLoad: function(callback, delay) {
 			if (!callback)
 				throw "Undefined callback argument";
 			var self = this;
 			setTimeout(function() {
-				var player = self.getPlayer();
-				if (player)
+				var highlighterRoot = document.querySelector(self.rootSelector);
+				if (highlighterRoot)
 					callback();
 				else
-					self._waitForPlayer(callback);
+					self._waitForPageLoad(callback);
 			}, delay !== undefined ? delay : 75);
 		},
 
-		isPlayerReady: function() {
-			try {
-				var player = this.getPlayer();
-				if (player && this.isPlayerHTML5())
-					return player.duration > 0;
-				else if (player.getVideoTime() > 0)
-					return true;
-			} catch (e) { }
-			return false;
+		_onPageLoaded: function() {
+			if (this.shouldFillForm())
+				this._installSelectHighlightHook();
+
+			this._setTimeline();
+			//this._setPlayerOffset();
+
+			if (this.shouldAddSegment()) {
+				this._addSegment();
+				this.openDescriptionPopup();
+			}
 		},
 
-		getPlayer: function() {
-			if (this._player)
-				return this._player;
-			return this._player = $("div.player video")[0] || $("div#player").find("object")[0];
+		shouldAddSegment: function() {
+			return !isNaN(this.start_time) && !isNaN(this.end_time);
 		},
 
-		isPlayerHTML5: function() {
-			return this.getPlayer().tagName.toLowerCase() === "video";
+		shouldFillForm: function() {
+			return this.title !== null || this.description !== null;
 		},
+
+		_installSelectHighlightHook: function() {
+			var timelineComponent = this._getTimelinePickerComponent();
+			if (!timelineComponent)
+				Logger.error("Couldn't install OnSelectSegmentClick hook");
+
+			var self = this;
+			timelineComponent.__onSelectSegmentClick_original = timelineComponent.onSelectSegmentClick;
+			timelineComponent.onSelectSegmentClick = function() {
+				timelineComponent.__onSelectSegmentClick_original();
+				self._onSelectSegmentClicked();
+			};
+		},
+
+		_onSelectSegmentClicked: function() {
+			var mainComponent = this._getMainComponent();
+
+			var self = this;
+			mainComponent.setState({}, function() {
+				var queue = mainComponent.state.videoSegmentQueue;
+				var segment = queue[queue.length - 1];
+				self._setSegmentMetadata(segment);
+			});
+		},
+
+		_setSegmentMetadata: function(segment) {
+			var metadata = segment.metadata;
+
+			if (this.title !== null)
+				metadata.title = this.title;
+			if (this.description !== null)
+				metadata.description = this.description;
+
+			metadata.tags = metadata.tags.slice();
+			metadata.tags.push("speedrun");
+			metadata.tags.push("speedrunning");
+		},
+
+		_setPlayerOffset: function() {
+			Logger.log("Setting video player offset");
+
+			var mainComponent = this._getMainComponent();
+			mainComponent.setState({ requestedPlayerOffset: this.start_time });
+		},
+
+		_setTimeline: function() {
+			Logger.log("Setting timeline");
+
+			var timeline = this._getTimelinePickerComponent();
+			if (!timeline) {
+				Logger.error("Couldn't find the timeline component");
+				return;
+			}
+
+			var state = timeline.state;
+			var segment = state.timelineSegments[0];
+			if (!isNaN(this.start_time))
+				segment.startOffset = this.start_time;
+			if (!isNaN(this.end_time))
+				segment.endOffset = this.end_time;
+		},
+
+		_addSegment: function() {
+			Logger.log("Adding video segment");
+
+			var comp = this._getTimelinePickerComponent();
+			if (!comp) {
+				Logger.error("Couldn't add the video segment.");
+				return;
+			}
+
+			var currentSeg = {
+				startOffset: this.start_time,
+				endOffset: this.end_time
+			};
+
+			// add the segment
+			comp.onSelectSegmentClick(currentSeg);
+		},
+
+		openDescriptionPopup: function() {
+			Logger.log("Opening description modal");
+
+			var btn = this._getDescribeBtnComponent();
+			if (!btn) {
+				Logger.error("Couldn't open the description modal");
+				return;
+			}
+
+			btn.props.onClick();
+		},
+
+		_getMainComponent: function() {
+			if (this._mainComponent)
+				return this._mainComponent;
+
+			var elem = document.querySelector(this.rootSelector);
+			var elemInstance = ReactHelper.getInstance(elem);
+			var fiber = ReactHelper.searchParent(elemInstance, function(target) {
+				var state = target.stateNode && target.stateNode.state;
+				return state && state.videoSegmentQueue;
+			});
+
+			if (!fiber) {
+				Logger.error("Couldn't find the main component");
+				return null;
+			}
+
+			this._mainComponent = fiber.stateNode;
+			return this._mainComponent;
+		},
+
+		_getTimelinePickerComponent: function() {
+			if (this._timelinePickerComponent)
+			return this._timelinePickerComponent;
+
+			var fiber =	ReactHelper.searchChildren(this._getMainComponent(), function(e) {
+				return e.stateNode && e.stateNode.state
+				&& e.stateNode.state.timelineSegments;
+			});
+
+			if (!fiber)
+			{
+				Logger.error("Couldn't find the timeline component");
+				return null;
+			}
+
+			return this._timelinePickerComponent = fiber.stateNode;
+		},
+
+		_getDescribeBtnComponent: function() {
+			if (this._describeBtnComponent)
+				return this._describeBtnComponent;
+
+			var queueFiber = ReactHelper.searchChildren(this._getMainComponent(), function(e) {
+				return e.stateNode && e.stateNode.props && e.stateNode.props.onSaveClick;
+			});
+
+			var fiber = ReactHelper.searchChildren(queueFiber, function(e) {
+				var props = e.stateNode && e.stateNode.props;
+				return props && props.onClick && props.fullWidth;
+			});
+
+			if (!fiber) {
+				Logger.error("Couldn't find the \"Describe and Save\" button");
+				return null;
+			}
+
+			this._describeBtnComponent = fiber.stateNode;
+			return this._describeBtnComponent;
+		},
+
 
 		_getUrlVars: function() {
 			var vars = {};
@@ -120,120 +332,67 @@
 			return vars;
 		},
 
-		_format_time: function(seconds, decimals) {
-			decimals = decimals || 0;
-			var hours = Math.floor(seconds / 3600);
-			if (hours > 0) {
-				seconds -= hours * 3600;
-				hours = hours + ":";
+		addMessageBox: function() {
+			msg = '<div class="' + this.messageBoxClassName +'" style="'
+				+ 'border: 1px solid rgba(60,60,60,1);' //#4e4e4e
+				+ 'padding: 10px;'
+				+ 'margin-bottom: 10px;'
+				+ 'background: rgba(255, 255, 255, 0.07);'
+				+ 'box-shadow: rgba(100,65,164,0.75) 0 0 10px;'
+				+ '">'
+				+ '<h4 style="text-align: center; margin-bottom: 5px;">Please wait...</h4>'
+				+ '<p style="font-size: 13px; margin-bottom: 3px;">Run Highlighter is waiting for the player to load.</p>'
+				+ '<p style="text-align: right;">seems broken?'
+				+ ' <a href="https://goo.gl/forms/2lyRNy0tl03rqlt82">contact me</a></p>'
+				+ '</div>';
+			if (this.hasRunHighlighterArgs) {
+				$(this.rootSelector).prepend(msg);
 			}
-			else
-				hours = "";
-
-			var minutes = Math.floor(seconds / 60);
-			seconds -= minutes * 60;
-			if (hours !== "" && minutes < 10)
-				minutes = "0" + minutes;
-
-			seconds = seconds.toFixed(decimals);
-			if (seconds < 10)
-				seconds = "0" + seconds;
-			return hours + minutes + ":" + seconds;
-		},
-
-		_setStartValue: function(seconds) {
-			if (isNaN(seconds))
-				return;
-			var elem = document.querySelector("input.start-time");
-			elem.value = this._format_time(seconds);
-			document.querySelector("input[name=start_time]").value = seconds;
-			this._simulateEvent(elem, "change"); //move markers
-		},
-
-		_setEndValue: function(seconds) {
-			if (isNaN(seconds))
-				return;
-			var elem = document.querySelector("input.end-time");
-			elem.value = this._format_time(seconds);
-			document.querySelector("input[name=end_time]").value = seconds;
-			this._simulateEvent(elem, "change"); //move markers
-		},
-
-		_simulateEvent: function(elem, evnt) {
-			var e = document.createEvent("HTMLEvents");
-			e.initEvent(evnt, true, true);
-			elem.dispatchEvent(e);
-		},
-
-		_fillForm: function() {
-			console.log("Run Highlighter: updating time ranges");
-			this._setStartValue(this.start_time);
-			this._setEndValue(this.end_time);
-
-			if (this.title !== null)
-				$("input[name=title]").val(this.title);
-
-			if (this.description !== null)
-				$("textarea[name=description]").val(this.description);
-
-			$("input[name=tag_list]").val("speedrun, speedrunning");
-
-			if (!isNaN(this.start_time) && !isNaN(this.end_time)) {
-				//click "Describe Highlight"
-				$("form.highlighter-form > div:eq(0) button").last().click();
-				//click "Create Highlight"
-				//if (this.automate === true)
-				//	$("form.highlighter-form > div:eq(1) button").last().click();
-			}
-		},
-
-		getPlayerCurrentTime: function() {
-			if (this.isPlayerHTML5())
-				return this.getPlayer().currentTime;
-			else
-				return this.getPlayer().getVideoTime();
-		},
-
-		_seekToStart: function() {
-			var player = this.getPlayer();
-			if (this.isPlayerHTML5())
-				player.currentTime = this.start_time;
-			else
-				player.videoSeek(this.start_time);
-			console.log("Run Highlighter: seeking to " + this.start_time);
-		},
-
-		_readyToSeekLoop: function(callback, delay) {
-			if (!callback)
-				throw "Undefined callback argument";
-			if (isNaN(this.start_time) || this.start_time <= 0)
-				return;
-
-			var self = this;
-			setTimeout(function () {
-				if (self.getPlayerCurrentTime() > 0)
-					callback();
-				else
-					self._readyToSeekLoop(callback);
-			}, delay !== undefined ? delay : 250);
-		},
-
-		//waits for the player to load (only use for flash)
-		_playerReadyLoop: function(callback, delay) {
-			if (!callback)
-				throw "Undefined callback argument";
-			if (isNaN(this.start_time) || isNaN(this.end_time))
-				return;
-
-			var self = this;
-			setTimeout(function() {
-				if (self.isPlayerReady())
-					callback();
-				else
-					self._playerReadyLoop(callback);
-			}, delay !== undefined ? delay : 250);
 		}
 	};
+
+	var getChannel = function() {
+		return window.location.pathname.split("/")[1];
+	}
+
+	var getRhUrl = function() {
+		return "https://dalet.github.io/run-highlighter/?channel=" + getChannel();
+	};
+
+	var onReady = function() {
+		var currentUrl = null;
+		setInterval(function() {
+			if (window.location.href === currentUrl)
+				return;
+			currentUrl = window.location.href;
+			pageAction();
+		}, 750);
+	};
+
+	var pageAction = function() {
+		if (/^\/[^\/]+\/manager\/highlighter\/[^\/]+\/?$/.test(window.location.pathname)) {
+			highlighterPageAction();
+		} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights|uploads|collections)\/?$/.test(window.location.pathname)) {
+			waitForKeyElements("div .directory_header li:eq(1)", function() {
+				var link = $('<li class="tw-tabs__item"><a href="' + getRhUrl() +'">Run Highlighter</a></li>');
+				$("div .directory_header li:last()").after(link);
+			}, true);
+		} else if (/^\/[^\/]+\/videos\/[^\/]+$/.test(window.location.pathname)) {
+			var blacklist = ["settings", "directory"];
+			if (blacklist.indexOf(getChannel()) < 0) {
+				waitForKeyElements("div.filter-bar .filter-bar__left", function() {
+					var link = $('<div class="run-highlighter-link" style="display: flex; align-items: center;">'
+						+ '<a href="' + getRhUrl() +'">Run Highlighter</a></div>');
+					$("div.filter-bar .filter-bar__left:last()").append(link);
+				}, true);
+			}
+		}
+	};
+
+	var highlighterPageAction = function() {
+		Highlighter.start();
+	};
+
 
 	var inject = function(src, callback) {
 		var s = document.createElement('script');
@@ -249,57 +408,12 @@
 			};
 		}
 		document.head.appendChild(s);
-	}
+	};
 
 	if (!/(www\.)?twitch\.tv$/.test(window.location.hostname))
 		return;
 
-	inject("https://dalet.github.io/run-highlighter/js/waitForKeyElements.js", function() {
-		var currentUrl = null;
-
-		setInterval(function() {
-			if (window.location.href === currentUrl)
-				return;
-			currentUrl = window.location.href;
-			var channel = window.location.pathname.split("/")[1];
-			var rh_url = "https://dalet.github.io/run-highlighter/?channel=" + channel;
-
-			if (/^\/[^\/]+\/manager\/[^\/]+\/highlight\/?$/.test(window.location.pathname)) {
-				Highlighter.highlight();
-				waitForKeyElements("form.highlighter-form div:eq(0) h4:eq(0)", function() {
-					msg = '<div class="run-highlighter-loading-msg" style="'
-						+ 'border: 1px solid rgba(60,60,60,1);' //#4e4e4e
-						+ 'padding: 10px;'
-						+ 'margin-bottom: 10px;'
-						+ 'background: rgba(255, 255, 255, 0.07);'
-						+ 'box-shadow: rgba(100,65,164,0.75) 0 0 10px;'
-						+ '">'
-						+ '<h4 style="text-align: center; margin-bottom: 5px;">Please wait...</h4>'
-						+ '<p style="font-size: 13px; margin-bottom: 3px;">Run Highlighter is waiting for the player to load.</p>'
-						+ '<p style="text-align: right;">seems broken?'
-						+ ' <a href="https://goo.gl/forms/2lyRNy0tl03rqlt82">contact me</a></p>'
-						+ '</div>';
-					if (Highlighter.isWaitingForPlayer)
-						$("form.highlighter-form").parent().prepend(msg);
-
-					var link = $('<br/>or <a href="' + rh_url + '">use Run Highlighter</a>');
-					$("form.highlighter-form div:eq(0) h4:eq(0)").append(link);
-				}, true);
-			} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights|uploads|collections)\/?$/.test(window.location.pathname)) {
-				waitForKeyElements("div .directory_header li:eq(1)", function() {
-					var link = $('<li class="tw-tabs__item"><a href="' + rh_url +'">Run Highlighter</a></li>');
-					$("div .directory_header li:last()").after(link);
-				}, true);
-			} else if (/^\/[^\/]+\/videos\/[^\/]+$/.test(window.location.pathname)) {
-				var blacklist = ["settings", "directory"];
-				if (blacklist.indexOf(channel) < 0) {
-					waitForKeyElements("div.filter-bar .filter-bar__left", function() {
-						var link = $('<div class="run-highlighter-link" style="display: flex; align-items: center;">'
-							+ '<a href="' + rh_url +'">Run Highlighter</a></div>');
-						$("div.filter-bar .filter-bar__left:last()").append(link);
-					}, true);
-				}
-			}
-		}, 750);
+	inject("https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js", function() {
+		inject("https://dalet.github.io/run-highlighter/js/waitForKeyElements.js", onReady);
 	});
 })();
