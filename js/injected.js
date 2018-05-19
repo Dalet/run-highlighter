@@ -24,6 +24,28 @@
 	document.body.setAttribute("run-highlighter-addon", "");
 	Logger.log("injected");
 
+	function waitForKeyElements(selector, callback, delay) {
+		if (!selector)
+			throw "Undefined selector argument";
+		if (!callback)
+			throw "Undefined callback argument";
+
+		if (delay === undefined)
+			delay = 200;
+
+		var element = document.querySelector(selector);
+		if (element)
+		{
+			callback();
+		}
+		else
+		{
+			setTimeout(function() {
+				waitForKeyElements(selector, callback, delay);
+			}, delay);
+		}
+	}
+
 	/*
 		React helper
 	*/
@@ -128,7 +150,7 @@
 
 			if (this.hasRunHighlighterArgs()) {
 				var self = this;
-				this._waitForPageLoad(function() { self._onPageLoaded(); }, 0);
+				this._waitForPageLoad(function() { self._onPageLoaded(); });
 			}
 		},
 
@@ -141,14 +163,11 @@
 		_waitForPageLoad: function(callback, delay) {
 			if (!callback)
 				throw "Undefined callback argument";
-			var self = this;
-			setTimeout(function() {
-				var highlighterRoot = document.querySelector(self.rootSelector);
-				if (highlighterRoot)
-					callback();
-				else
-					self._waitForPageLoad(callback);
-			}, delay !== undefined ? delay : 75);
+
+			if (delay === undefined)
+				delay = 125;
+
+			waitForKeyElements(this.rootSelector, callback, delay);
 		},
 
 		_onPageLoaded: function() {
@@ -292,8 +311,7 @@
 				&& e.stateNode.state.timelineSegments;
 			});
 
-			if (!fiber)
-			{
+			if (!fiber) {
 				Logger.error("Couldn't find the timeline component");
 				return null;
 			}
@@ -331,24 +349,6 @@
 			});
 			return vars;
 		},
-
-		addMessageBox: function() {
-			msg = '<div class="' + this.messageBoxClassName +'" style="'
-				+ 'border: 1px solid rgba(60,60,60,1);' //#4e4e4e
-				+ 'padding: 10px;'
-				+ 'margin-bottom: 10px;'
-				+ 'background: rgba(255, 255, 255, 0.07);'
-				+ 'box-shadow: rgba(100,65,164,0.75) 0 0 10px;'
-				+ '">'
-				+ '<h4 style="text-align: center; margin-bottom: 5px;">Please wait...</h4>'
-				+ '<p style="font-size: 13px; margin-bottom: 3px;">Run Highlighter is waiting for the player to load.</p>'
-				+ '<p style="text-align: right;">seems broken?'
-				+ ' <a href="https://goo.gl/forms/2lyRNy0tl03rqlt82">contact me</a></p>'
-				+ '</div>';
-			if (this.hasRunHighlighterArgs) {
-				$(this.rootSelector).prepend(msg);
-			}
-		}
 	};
 
 	var getChannel = function() {
@@ -359,7 +359,31 @@
 		return "https://dalet.github.io/run-highlighter/?channel=" + getChannel();
 	};
 
-	var onReady = function() {
+	var pageAction = function() {
+		if (/^\/[^\/]+\/manager\/highlighter\/[^\/]+\/?$/.test(window.location.pathname)) {
+			highlighterPageAction();
+		}/* else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights|uploads|collections)\/?$/.test(window.location.pathname)) {
+			waitForKeyElements("div .directory_header li:eq(1)", function() {
+				var link = $('<li class="tw-tabs__item"><a href="' + getRhUrl() +'">Run Highlighter</a></li>');
+				$("div .directory_header li:last()").after(link);
+			});
+		} else if (/^\/[^\/]+\/videos\/[^\/]+$/.test(window.location.pathname)) {
+			var blacklist = ["settings", "directory"];
+			if (blacklist.indexOf(getChannel()) < 0) {
+				waitForKeyElements("div.filter-bar .filter-bar__left", function() {
+					var link = $('<div class="run-highlighter-link" style="display: flex; align-items: center;">'
+						+ '<a href="' + getRhUrl() +'">Run Highlighter</a></div>');
+					$("div.filter-bar .filter-bar__left:last()").append(link);
+				});
+			}
+		}*/
+	};
+
+	var highlighterPageAction = function() {
+		Highlighter.start();
+	};
+
+	var init = function() {
 		var currentUrl = null;
 		setInterval(function() {
 			if (window.location.href === currentUrl)
@@ -369,51 +393,6 @@
 		}, 750);
 	};
 
-	var pageAction = function() {
-		if (/^\/[^\/]+\/manager\/highlighter\/[^\/]+\/?$/.test(window.location.pathname)) {
-			highlighterPageAction();
-		} else if (/^\/[^\/]+\/manager\/(past_broadcasts|highlights|uploads|collections)\/?$/.test(window.location.pathname)) {
-			waitForKeyElements("div .directory_header li:eq(1)", function() {
-				var link = $('<li class="tw-tabs__item"><a href="' + getRhUrl() +'">Run Highlighter</a></li>');
-				$("div .directory_header li:last()").after(link);
-			}, true);
-		} else if (/^\/[^\/]+\/videos\/[^\/]+$/.test(window.location.pathname)) {
-			var blacklist = ["settings", "directory"];
-			if (blacklist.indexOf(getChannel()) < 0) {
-				waitForKeyElements("div.filter-bar .filter-bar__left", function() {
-					var link = $('<div class="run-highlighter-link" style="display: flex; align-items: center;">'
-						+ '<a href="' + getRhUrl() +'">Run Highlighter</a></div>');
-					$("div.filter-bar .filter-bar__left:last()").append(link);
-				}, true);
-			}
-		}
-	};
-
-	var highlighterPageAction = function() {
-		Highlighter.start();
-	};
-
-
-	var inject = function(src, callback) {
-		var s = document.createElement('script');
-		s.src = src;
-		s.async = true;
-		s.onload = function() { this.parentNode.removeChild(this); };
-		if (callback) {
-			s.onreadystatechange = s.onload = function() {
-				if (!callback.done && (!s.readyState || /loaded|complete/.test(s.readyState))) {
-					callback.done = true;
-					callback();
-				}
-			};
-		}
-		document.head.appendChild(s);
-	};
-
-	if (!/(www\.)?twitch\.tv$/.test(window.location.hostname))
-		return;
-
-	inject("https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js", function() {
-		inject("https://dalet.github.io/run-highlighter/js/waitForKeyElements.js", onReady);
-	});
+	if (/(www\.)?twitch\.tv$/.test(window.location.hostname))
+		init();
 })();
