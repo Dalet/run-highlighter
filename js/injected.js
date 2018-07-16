@@ -159,7 +159,6 @@
 				|| !isNaN(this.start_time) || !isNaN(this.end_time);
 		},
 
-
 		_waitForPageLoad: function(callback, delay) {
 			if (!callback)
 				throw "Undefined callback argument";
@@ -171,48 +170,42 @@
 		},
 
 		_onPageLoaded: function() {
-			if (this.shouldFillForm())
-				this._installSelectHighlightHook();
-
-			this._setTimeline();
-			//this._setPlayerOffset();
-
-			if (this.shouldAddSegment()) {
-				this._addSegment();
+			this.overwriteVideoQueue();
+			if (this.AreStartAndEndSet())
 				this.openDescriptionPopup();
-			}
 		},
 
-		shouldAddSegment: function() {
+		AreStartAndEndSet: function() {
 			return !isNaN(this.start_time) && !isNaN(this.end_time);
 		},
 
-		shouldFillForm: function() {
-			return this.title !== null || this.description !== null;
-		},
+		overwriteVideoQueue: function() {
+			Logger.log("Overwriting first video segment");
 
-		_installSelectHighlightHook: function() {
-			var timelineComponent = this._getTimelinePickerComponent();
-			if (!timelineComponent)
-				Logger.error("Couldn't install OnSelectSegmentClick hook");
-
-			var self = this;
-			timelineComponent.__onSelectSegmentClick_original = timelineComponent.onSelectSegmentClick;
-			timelineComponent.onSelectSegmentClick = function() {
-				timelineComponent.__onSelectSegmentClick_original();
-				self._onSelectSegmentClicked();
-			};
-		},
-
-		_onSelectSegmentClicked: function() {
 			var mainComponent = this._getMainComponent();
 
-			var self = this;
-			mainComponent.setState({}, function() {
-				var queue = mainComponent.state.videoSegmentQueue;
-				var segment = queue[queue.length - 1];
-				self._setSegmentMetadata(segment);
+			var queue = mainComponent.state.videoSegmentQueue;
+			var segment = queue[queue.length - 1];
+			this._setSegmentMetadata(segment);
+			this._setSegmentOffsets(segment);
+
+			mainComponent.setState({
+				videoSegmentQueue: [
+					segment
+				]
 			});
+		},
+
+		openDescriptionPopup: function() {
+			Logger.log("Opening description modal");
+
+			var btn = this._getDescribeBtnComponent();
+			if (!btn) {
+				Logger.error("Couldn't open the description modal");
+				return;
+			}
+
+			btn.props.onClick();
 		},
 
 		_setSegmentMetadata: function(segment) {
@@ -228,58 +221,19 @@
 			metadata.tags.push("speedrunning");
 		},
 
+		_setSegmentOffsets: function(segment) {
+			if (!isNaN(this.start_time))
+				segment.startOffsetSeconds = this.start_time;
+
+			if (!isNaN(this.end_time))
+				segment.endOffsetSeconds = this.end_time;
+		},
+
 		_setPlayerOffset: function() {
 			Logger.log("Setting video player offset");
 
 			var mainComponent = this._getMainComponent();
 			mainComponent.setState({ requestedPlayerOffset: this.start_time });
-		},
-
-		_setTimeline: function() {
-			Logger.log("Setting timeline");
-
-			var timeline = this._getTimelinePickerComponent();
-			if (!timeline) {
-				Logger.error("Couldn't find the timeline component");
-				return;
-			}
-
-			var state = timeline.state;
-			var segment = state.timelineSegments[0];
-			if (!isNaN(this.start_time))
-				segment.startOffset = this.start_time;
-			if (!isNaN(this.end_time))
-				segment.endOffset = this.end_time;
-		},
-
-		_addSegment: function() {
-			Logger.log("Adding video segment");
-
-			var comp = this._getTimelinePickerComponent();
-			if (!comp) {
-				Logger.error("Couldn't add the video segment.");
-				return;
-			}
-
-			var currentSeg = {
-				startOffset: this.start_time,
-				endOffset: this.end_time
-			};
-
-			// add the segment
-			comp.onSelectSegmentClick(currentSeg);
-		},
-
-		openDescriptionPopup: function() {
-			Logger.log("Opening description modal");
-
-			var btn = this._getDescribeBtnComponent();
-			if (!btn) {
-				Logger.error("Couldn't open the description modal");
-				return;
-			}
-
-			btn.props.onClick();
 		},
 
 		_getMainComponent: function() {
@@ -300,23 +254,6 @@
 
 			this._mainComponent = fiber.stateNode;
 			return this._mainComponent;
-		},
-
-		_getTimelinePickerComponent: function() {
-			if (this._timelinePickerComponent)
-			return this._timelinePickerComponent;
-
-			var fiber =	ReactHelper.searchChildren(this._getMainComponent(), function(e) {
-				return e.stateNode && e.stateNode.state
-				&& e.stateNode.state.timelineSegments;
-			});
-
-			if (!fiber) {
-				Logger.error("Couldn't find the timeline component");
-				return null;
-			}
-
-			return this._timelinePickerComponent = fiber.stateNode;
 		},
 
 		_getDescribeBtnComponent: function() {
