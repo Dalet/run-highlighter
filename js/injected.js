@@ -171,11 +171,11 @@
 
 		_onPageLoaded: function() {
 			this.overwriteVideoQueue();
-			if (this.AreStartAndEndSet())
+			if (this.areStartAndEndSet())
 				this.openDescriptionPopup();
 		},
 
-		AreStartAndEndSet: function() {
+		areStartAndEndSet: function() {
 			return !isNaN(this.start_time) && !isNaN(this.end_time);
 		},
 
