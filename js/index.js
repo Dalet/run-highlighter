@@ -263,7 +263,7 @@
 						window.open($(this).attr("href"), "_blank");
 					});
 				});
-			} else if (addon) {
+			} else {
 				components.messageDisplay.setMessage(message + '<br/><br/>You will be redirected to the highlighter page in'
 					+ ' <span id="redirection-countdown">3</span> seconds...'
 					+ ' <a href="javascript:void(0)" id="cancel-redirection">cancel</a></span>',
@@ -286,7 +286,7 @@
 				$("a#cancel-redirection").click(function () {
 					window.clearInterval(self.redirect_interval);
 					self.redirect_interval = null;
-					components.messageDisplay.setMessage(message + "<br/><br/>Click the VOD link to start highlighting with the add-on.",
+					components.messageDisplay.setMessage(message + "<br/><br/>Click the VOD link to start highlighting.",
 						"alert-success");
 					console.log("Cancelled redirection.");
 				});
@@ -295,7 +295,7 @@
 			if (!addon) {
 				var link = '<a class="addon-download-link">Run Highligher add-on</a>';
 				var text = '<br/><br/>Install the ' + link
-					+ ' to set the highlight markers automatically!';
+					+ ' to customize the highlight description automatically.';
 				$("div#error-message").append(text);
 				makeDownloadLink($("#error-message .addon-download-link"));
 			}
