@@ -647,7 +647,7 @@ var RunHighlighter = RunHighlighter || {
 			"get_addon_link": function() {
 				var tit = this.getTitle();
 				tit = tit.length > 0
-					? "&title=" + encodeURIComponent(window.btoa(tit))
+					? "&title=" + encodeURIComponent(tit)
 					: "";
 
 				var desc = this.getDescription();
@@ -655,8 +655,8 @@ var RunHighlighter = RunHighlighter || {
 					? "&desc=" + encodeURIComponent(window.btoa(desc))
 					: "";
 
-				return this.link + "?start_time=" + this.start_time
-					+ "&end_time=" + this.end_time
+				return this.link + "?start=" + this.start_time
+					+ "&end=" + this.end_time
 					+ tit + desc;
 			}
 		};

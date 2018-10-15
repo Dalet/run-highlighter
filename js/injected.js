@@ -129,8 +129,8 @@
 
 		start: function() {
 			var urlVars = this._getUrlVars();
-			this.start_time = parseInt(urlVars.start_time);
-			this.end_time = parseInt(urlVars.end_time);
+			this.start_time = parseInt(urlVars.start);
+			this.end_time = parseInt(urlVars.end);
 			this.automate = urlVars.automate === "true" || parseInt(urlVars.automate) === 1;
 			this.title = null;
 			this.description = null;
@@ -171,8 +171,10 @@
 
 		_onPageLoaded: function() {
 			this.overwriteVideoQueue();
-			if (this.areStartAndEndSet())
-				this.openDescriptionPopup();
+
+			// TODO: fix
+			// if (this.areStartAndEndSet())
+			// 	this.openDescriptionPopup();
 		},
 
 		areStartAndEndSet: function() {
@@ -187,7 +189,6 @@
 			var queue = mainComponent.state.videoSegmentQueue;
 			var segment = queue[queue.length - 1];
 			this._setSegmentMetadata(segment);
-			this._setSegmentOffsets(segment);
 
 			mainComponent.setState({
 				videoSegmentQueue: [
@@ -211,22 +212,12 @@
 		_setSegmentMetadata: function(segment) {
 			var metadata = segment.metadata;
 
-			if (this.title !== null)
-				metadata.title = this.title;
 			if (this.description !== null)
 				metadata.description = this.description;
 
 			metadata.tags = metadata.tags.slice();
 			metadata.tags.push("speedrun");
 			metadata.tags.push("speedrunning");
-		},
-
-		_setSegmentOffsets: function(segment) {
-			if (!isNaN(this.start_time))
-				segment.startOffsetSeconds = this.start_time;
-
-			if (!isNaN(this.end_time))
-				segment.endOffsetSeconds = this.end_time;
 		},
 
 		_setPlayerOffset: function() {
