@@ -497,7 +497,7 @@ var RunHighlighter = RunHighlighter || {
 				return;
 
 			self._xhr.open("GET", url);
-			self._xhr.setRequestHeader('Accept', 'application/vnd.twitchtv.v3+json');
+			self._xhr.setRequestHeader('Accept', 'application/vnd.twitchtv.v5+json');
 			self._xhr.setRequestHeader('Client-ID', "5vm04dvyqpvledw9nknkgu1ex2tzyvs");
 			self._xhr.send();
 		}, delay);
@@ -516,6 +516,31 @@ var RunHighlighter = RunHighlighter || {
 		console.log("Run Highlighter: search aborted");
 	},
 
+	getUserId: function(username, callback){
+		var self = this;
+		this._searchCancellationRequested = false;
+
+		this._twitchApiCall("users?login=" + username, function(event) {
+			var ret = null;
+			try {
+				ret = JSON.parse(self._xhr.response);
+			} catch(e) {}
+
+			var requestInfo = {
+				"status": self._xhr.status,
+				"statusText": self._xhr.statusText,
+				"response": ret
+			};
+
+			if (requestInfo.status >= 300 || !ret || ret._total <= 0) {
+				callback(null, requestInfo);
+				return;
+			}
+
+			callback(ret.users[0]._id, requestInfo);
+		});
+	},
+
 	searchVideo: function(vid, run){
 		var vidStart = moment.utc(vid.recorded_at);
 		var vidEnd = vidStart.clone().add(vid.length, 'seconds');
@@ -525,10 +550,11 @@ var RunHighlighter = RunHighlighter || {
 		return false;
 	},
 
-	searchRun: function(channel, run, callback, progressCallback){
+	searchRun: function(channel, channel_id, run, callback, progressCallback){
 		var self = this;
 		var videoCount = 0;
 		var all_parts_found = false;
+		var api_url = "channels/" + channel_id + "/videos?broadcast_type=archive&limit=30";
 
 		this._searchCancellationRequested = false;
 
@@ -589,12 +615,12 @@ var RunHighlighter = RunHighlighter || {
 						total: ret._total
 					});
 				}
-				self._twitchApiCall(ret._links.next, listener);
+				self._twitchApiCall(api_url + "&offset=" + videoCount, listener);
 			}
 			else
 				callback(null, requestInfo);
 		};
-		this._twitchApiCall("channels/" + channel + "/videos?broadcasts=true&limit=30", listener);
+		this._twitchApiCall(api_url, listener);
 	},
 
 	_videoToHighlight: function(channel, video, run) {

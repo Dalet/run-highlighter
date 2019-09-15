@@ -151,14 +151,27 @@
 			console.log(run);
 
 			try {
-				console.log("Run Highlighter: started searching for video...");
-				RunHighlighter.searchRun(channel, run, function(highlight, requestInfo) {
-						self.makeResultMessage(channel, highlight, requestInfo);
-					},
-					function(progress) {
-						$("#search-progress").text(" (" + progress.current + "/" + progress.total + " videos)");
+				console.log("Run Highlighter: looking up user id...");
+				RunHighlighter.getUserId(channel, function(channel_id, reqInfo) {
+					if (!channel_id) {
+						// 2xx codes are not errors
+						if (reqInfo.status >= 200 && reqInfo.status < 300) {
+							components.messageDisplay.setMessage("No channel named <strong>" + channel + "</strong> seems to exist.", "alert-warning");
+						} else {
+							self.makeResultMessage(channel, null, reqInfo);
+						}
+						return;
 					}
-				);
+
+					console.log("Run Highlighter: started searching for video...");
+					RunHighlighter.searchRun(channel, channel_id, run, function(highlight, requestInfo) {
+							self.makeResultMessage(channel, highlight, requestInfo);
+						},
+						function(progress) {
+							$("#search-progress").text(" (" + progress.current + "/" + progress.total + " videos)");
+						}
+					);
+				});
 			} catch (e) {
 				console.error("Run Highlighter: " + e);
 				components.messageDisplay.setMessage("Error.", "alert-danger");
