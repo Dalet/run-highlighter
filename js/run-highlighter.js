@@ -645,7 +645,7 @@ var RunHighlighter = RunHighlighter || {
 
 		var duration = run.ended.diff(run.started) / 1000;
 		var videoId = video._id.match(/\d+/)[0];
-		var link = "https://www.twitch.tv/" + channel + "/manager/highlighter/" + videoId;
+		var link = "https://dashboard.twitch.tv/u/" + channel + "/content/video-producer/highlighter/" + videoId;
 
 		var format = run.type === "segment"
 			? this.settings.segmentTitle
