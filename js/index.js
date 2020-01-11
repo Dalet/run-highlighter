@@ -121,7 +121,7 @@
 			}
 
 			var channelElem = components.channelInput.jElement;
-			var channel = channelElem.val();
+			var channel = channelElem.val().toLowerCase();
 			if (channel.length <= 0)
 			{
 				channelElem.parent().addClass("has-warning");
