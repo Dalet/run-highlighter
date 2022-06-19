@@ -1,0 +1,1 @@
+import{d as e,o,c as r,_ as n}from"./entry-72ed921d.mjs";const t="IDropdownDivider";var s=e({name:t});const a={class:"dropdown-divider",role:"separator"};function d(c,i,_,p,l,m){return o(),r("div",a)}var f=n(s,[["render",d]]);export{f as default};

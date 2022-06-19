@@ -1,0 +1,1 @@
+import{o as s,c as a,r as o,n as r,_ as n,q as t}from"./entry-72ed921d.mjs";function c(e,l,p,_,d,i){return s(),a("div",{class:r(["container",e.classes])},[o(e.$slots,"default")],2)}var m=n(t,[["render",c]]);export{m as default};

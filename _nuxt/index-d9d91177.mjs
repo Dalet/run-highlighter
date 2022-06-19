@@ -1,0 +1,1 @@
+import{d as a,o as t,c as o,r as i,e as s,_ as r}from"./entry-72ed921d.mjs";const d="IMedia";var m=a({name:d});const n={class:"media"},l={class:"media-body"};function c(e,f,x,g,_,b){return t(),o("div",n,[i(e.$slots,"image"),s("div",l,[i(e.$slots,"default")])])}var h=r(m,[["render",c]]);export{h as default};

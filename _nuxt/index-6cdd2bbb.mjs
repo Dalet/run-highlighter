@@ -1,0 +1,1 @@
+import{o as a,c as t,e as r,r as s,n as o,_ as l,S as n}from"./entry-72ed921d.mjs";const c={class:"tabs-header"};function d(e,i,_,p,u,m){return a(),t("div",{class:o(["tabs",e.classes]),role:"tablist","aria-multiselectable":"true"},[r("div",c,[s(e.$slots,"header")]),s(e.$slots,"default")],2)}var $=l(n,[["render",d]]);export{$ as default};
