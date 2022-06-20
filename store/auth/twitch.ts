@@ -3,7 +3,6 @@ import { useStorage } from "@vueuse/core";
 import { twitchApi } from "~~/services/twitch-api";
 import { registerAuthProvider, useAuthStore, ProfileInfo as ProfileInfo } from ".";
 import { useHighlighterStore } from "../highlighter";
-import { FetchError } from "ohmyfetch";
 
 const TWITCH_PROVIDER_NAME = "twitch";
 
@@ -39,7 +38,7 @@ export const useTwitchAuthStore = defineStore(key, {
     state: () => useStorage(key, getInitialState()),
     getters: {
         isSignedIn: state => state.accessToken != null,
-        providerIcon: _ =>  useRuntimeConfig().app.baseURL + "/images/twitch-glitch-logo.svg"
+        providerIcon: _ =>  appLink("images/twitch-glitch-logo.svg")
     },
     actions: {
         reset() {

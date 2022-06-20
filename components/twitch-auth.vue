@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import { CLIENT_ID } from '~~/globals';
 
-const baseUrl = useRuntimeConfig().app.baseURL;
-
-const redirectUri = window.location.origin + baseUrl + "/callback/twitch";
+const redirectUri = window.location.origin + appLink("callback/twitch");
 const scope = window.encodeURIComponent("");
 
 const twitchAutorizationUri = "https://id.twitch.tv/oauth2/authorize"
 + `?client_id=${CLIENT_ID}&redirect_uri=${redirectUri}`
 + `&response_type=token&scope=${scope}`;
 
+const twitchLogoUrl = appLink("images/twitch-glitch-logo.svg");
 const loading = ref(false);
 const btnText = computed(() => {
     if (loading.value) {
@@ -27,7 +26,7 @@ function click() {
 
 <template>
     <i-button type="button" :disabled="loading" class="_background:twitch btn-twitch" @click="click">
-        <img v-if="!loading" :src="baseUrl + '/images/twitch-glitch-logo.svg'" class="_margin-right:1/2 inkline-icon -lg"/>
+        <img v-if="!loading" :src="twitchLogoUrl" class="_margin-right:1/2 inkline-icon -lg"/>
         <i-loader class="_margin-right:1/2" v-else color="light" size="lg"></i-loader>
         {{ btnText }}
     </i-button>

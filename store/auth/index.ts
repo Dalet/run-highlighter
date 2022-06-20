@@ -58,7 +58,7 @@ function getDemoProfileInfo(): ProfileInfo {
     if (!demoProfileInfo) {
         demoProfileInfo = {
             displayName: "Demo_user",
-            profilePictureUrl: useRuntimeConfig().app.baseURL + "/images/demo-user-profile-picture.png"
+            profilePictureUrl: appLink("images/demo-user-profile-picture.png")
         }
     }
     return demoProfileInfo;

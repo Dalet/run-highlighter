@@ -22,8 +22,7 @@ const isDemoFile = (file: File | null) => file && demoFileMetadata
     && Object.keys(demoFileMetadata).every(key => file[key] === demoFileMetadata![key]);
 
 async function getDemoFile() {
-    const baseUrl = useRuntimeConfig().app.baseURL;
-    const response = await fetch(baseUrl + "/demo-splits.lss");
+    const response = await fetch(appLink("demo-splits.lss"));
     const blob = await response.blob();
     const file = new File([blob], "demo-splits.lss", {
         lastModified: new Date(2000, 1, 1).getTime(),
