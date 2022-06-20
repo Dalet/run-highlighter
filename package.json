@@ -1,0 +1,23 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview"
+  },
+  "devDependencies": {
+    "@types/jquery": "3.5.14",
+    "nuxt": "^3.0.0-rc.4",
+    "sass": "1.52.1"
+  },
+  "dependencies": {
+    "@inkline/inkline": "3.0.8",
+    "@inkline/nuxt": "3.1.0",
+    "@pinia/nuxt": "0.1.9",
+    "@vueuse/core": "^8.5.0",
+    "dayjs": "^1.11.3",
+    "jquery": "3.6.0",
+    "pinia": "2.0.14"
+  }
+}
