@@ -2,8 +2,8 @@ import dayjs from 'dayjs';
 
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
-import duration from "dayjs/plugin/Duration";
-import utc from "dayjs/plugin/Utc";
+import duration from "dayjs/plugin/duration";
+import utc from "dayjs/plugin/utc";
 import relativeTime from "dayjs/plugin/relativeTime";
 
 dayjs.extend(relativeTime);
