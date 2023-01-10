@@ -1,10 +1,11 @@
-import { defineNuxtConfig } from "nuxt"
+import { defineNuxtConfig } from "nuxt/config"
 
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
-    buildModules: [
+    modules: [
         "@pinia/nuxt",
-        "@inkline/nuxt"
+        "@inkline/nuxt",
+        "@vueuse/nuxt"
     ],
     inkline: {
         colorMode: "dark"

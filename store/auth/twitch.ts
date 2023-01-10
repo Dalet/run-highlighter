@@ -4,7 +4,7 @@ import { twitchApi } from "~~/services/twitch-api";
 import { registerAuthProvider, useAuthStore, ProfileInfo as ProfileInfo } from ".";
 import { useHighlighterStore } from "../highlighter";
 
-const TWITCH_PROVIDER_NAME = "twitch";
+export const TWITCH_PROVIDER_NAME = "twitch";
 
 interface TwitchAuthState {
     accessToken: string;
@@ -38,7 +38,7 @@ export const useTwitchAuthStore = defineStore(key, {
     state: () => useStorage(key, getInitialState()),
     getters: {
         isSignedIn: state => state.accessToken != null,
-        providerIcon: _ =>  appLink("images/twitch-glitch-logo.svg")
+        providerIcon: _ => appLink("images/twitch-glitch-logo.svg")
     },
     actions: {
         reset() {
@@ -87,5 +87,3 @@ export const useTwitchAuthStore = defineStore(key, {
         },
     }
 });
-
-registerAuthProvider(TWITCH_PROVIDER_NAME, useTwitchAuthStore);

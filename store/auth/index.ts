@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
 import { useStorage } from "@vueuse/core";
-import { useTwitchAuthStore } from "./twitch";
 import { useHighlighterStore } from "../highlighter";
+import { demoProvider, DEMO_PROVIDER_NAME } from "./demo";
+import { TWITCH_PROVIDER_NAME, useTwitchAuthStore } from "./twitch";
 
 type AuthInfo = {
     providerName: string;
@@ -19,7 +20,7 @@ export const useAuthStore = defineStore(key, {
     getters: {
         isSignedIn: state => getAuthProvider(state.providerName).isSignedIn,
         providerIcon: state => getAuthProvider(state.providerName).providerIcon,
-        isDemoMode: state => state.providerName === DEMO_PROVIDER,
+        isDemoMode: state => state.providerName === DEMO_PROVIDER_NAME,
         profileInfo: state => getAuthProvider(state.providerName).profileInfo
     },
     actions: {
@@ -46,36 +47,11 @@ export const useAuthStore = defineStore(key, {
         },
 
         signInWithDemoMode() {
-            getAuthProvider(DEMO_PROVIDER).signIn("");
-            this.providerName = DEMO_PROVIDER;
+            getAuthProvider(DEMO_PROVIDER_NAME).signIn("");
+            this.providerName = DEMO_PROVIDER_NAME;
             navigateTo("/");
         }
     }
-});
-
-let demoProfileInfo: ProfileInfo | null = null;
-function getDemoProfileInfo(): ProfileInfo {
-    if (!demoProfileInfo) {
-        demoProfileInfo = {
-            displayName: "Demo_user",
-            profilePictureUrl: appLink("images/demo-user-profile-picture.png")
-        }
-    }
-    return demoProfileInfo;
-}
-const DEMO_PROVIDER = "demo";
-const demoProvider: AuthProvider = reactive({
-    demoEnabled: false,
-    get isSignedIn() { return this.demoEnabled; },
-    get profileInfo() { return getDemoProfileInfo() },
-    get providerIcon() { return useTwitchAuthStore().providerIcon; },
-    async signIn(_: string) {
-        useHighlighterStore().channel = "demo_user";
-        this.demoEnabled = true;
-    },
-    async signOut() { this.demoEnabled = false; },
-    async restoreLogin() { this.signOut(); },
-    async getProfileInfo() { return getDemoProfileInfo(); }
 });
 
 const NONE_PROVIDER = "none";
@@ -89,20 +65,21 @@ const noProvider: AuthProvider =({
     getProfileInfo() { throw new Error("No provider"); }
 });
 
-const authProviders: Record<string, () => AuthProvider> = {
+export const authProviders: Record<string, () => AuthProvider> = {
     [NONE_PROVIDER]: () => noProvider,
-    [DEMO_PROVIDER]: () => demoProvider
+    [DEMO_PROVIDER_NAME]: () => demoProvider,
+    [TWITCH_PROVIDER_NAME]: useTwitchAuthStore
 }
 
 function getAuthProvider(providerName: string): AuthProvider {
     return authProviders[providerName]();
 }
 
-export function registerAuthProvider(name: string, providerGetter: () => AuthProvider) {
+export const registerAuthProvider = function(name: string, providerGetter: () => AuthProvider) {
     authProviders[name] = providerGetter; 
 }
 
-interface AuthProvider {
+export interface AuthProvider {
     get isSignedIn(): boolean;
     get profileInfo(): ProfileInfo | null;
     restoreLogin(): Promise<void>;
