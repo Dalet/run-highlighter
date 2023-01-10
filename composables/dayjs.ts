@@ -23,8 +23,8 @@ function DurationParser(option, dayjsClass, dayjsFactory) {
 
         const str = <string>arguments[0];
         const regexes = [
-            /^(?:(?:(?<hours>\d{2}):)?(?<minutes>\d{2})?:)?(?<seconds>\d{2})(?:.(?<milliseconds>\d{1,3}))?/,
-            /(?:(?<days>\d+)d)?(?:(?<hours>\d+)h)?(?:(?<minutes>\d+)m)?(?:(?<seconds>\d+)s)/i
+            /^(?:(?:(?<hours>\d{2}):)?(?<minutes>\d{2})?:)?(?<seconds>\d{2})(?:\.(?<milliseconds>\d{1,3})\d*)?$/,
+            /^(?:(?<days>\d+)d)?(?:(?<hours>\d+)h)?(?:(?<minutes>\d+)m)?(?:(?<seconds>\d+)s)$/i
         ];
         for (const regex of regexes) {
             const match: any = str.match(regex)
