@@ -52,14 +52,6 @@ export const RunHighlighter = {
         segmentTitle: _segmentTitle_default,
         description: _description_default,
     },
-
-    _videosToHighlights: function (channel: string, videos, run: Run): Highlight[] {
-        const highlights: Highlight[] = [];
-        for (let i = videos.length - 1; i >= 0; --i) {
-            highlights.push(this._videoToHighlight(channel, videos[i], run, i));
-        }
-        return highlights;
-    },
 };
 
 export async function searchRun(run: Run, abortSignal: AbortSignal, username?: string): Promise<Highlight[]> {
@@ -262,7 +254,7 @@ function formatText(raw: string, run: Run) {
         "$segment": segmentName
     };
 
-    const escapeRegExp = function(unescapedRegExp) {
+    const escapeRegExp = function(unescapedRegExp: string) {
         return unescapedRegExp.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
     }
 
