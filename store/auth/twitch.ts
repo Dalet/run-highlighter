@@ -78,9 +78,7 @@ export const useTwitchAuthStore = defineStore(key, {
                     profilePictureUrl: info.profile_image_url
                 };
 
-                this.$patch(<TwitchAuthState>{
-                    profileInfo
-                });
+                this.profileInfo = profileInfo;
 
                 return profileInfo;
             });

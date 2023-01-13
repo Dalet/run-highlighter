@@ -1,28 +1,25 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { useAuthStore } from '~~/store/auth';
 
 const auth = useAuthStore();
+const { profileInfo, providerIcon } = storeToRefs(auth);
 
-async function fetchUserInfo() {
+watchEffect(async () => {
     if (auth.isSignedIn && !auth.profileInfo) {
         await auth.getProfileInfo();
     }
-}
-
-const profilePictureUrl = computed(() => auth.profileInfo?.profilePictureUrl);
-const providerIcon = computed(() => auth.providerIcon);
-const displayName = computed(() => auth.profileInfo?.displayName);
-
-await fetchUserInfo();
-watch(() => auth.isSignedIn, fetchUserInfo);
+});
 </script>
 
 <template>
 <div>
     <i-dropdown class="user-btn-dropdown">
         <i-button>
-            <img v-if="profilePictureUrl" class="profile-picture _margin-right:1/2" :src="profilePictureUrl" />
-            {{ displayName }}
+            <i-loader v-if="!profileInfo" size="lg" color="primary" class="_margin-right:1/2" />
+            <img v-if="profileInfo?.profilePictureUrl" class="profile-picture _margin-right:1/2"
+                :src="profileInfo.profilePictureUrl" />
+            {{ profileInfo?.displayName ?? "Loading..." }}
             <img v-if="providerIcon" class="provider-icon _margin-left:1" :src="providerIcon"/>
         </i-button>
         <template #body>
