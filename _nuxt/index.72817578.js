@@ -1,0 +1,1 @@
+import{a as s,o as n,e as t,r as o,l as a,j as r}from"./entry.b2982cee.js";const l="IContainer",c=s({name:l,props:{fluid:{type:Boolean,default:!1}},computed:{classes(){return{"-fluid":this.fluid}}}});function _(e,p,d,i,u,f){return n(),t("div",{class:a(["container",e.classes])},[o(e.$slots,"default")],2)}const $=r(c,[["render",_]]);export{$ as default};

@@ -1,0 +1,1 @@
+import{a as s,o as t,e as o,h as a,r as n,j as c}from"./entry.b2982cee.js";const d="ILayoutAside",_=s({name:d}),r={class:"layout-aside"},i={class:"layout-aside-children"};function l(e,p,u,f,m,y){return t(),o("aside",r,[a("div",i,[n(e.$slots,"default",{},void 0,!0)])])}const $=c(_,[["render",l],["__scopeId","data-v-6e13c28d"]]);export{$ as default};

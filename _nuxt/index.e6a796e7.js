@@ -1,0 +1,1 @@
+import{a as e,o,e as n,j as s}from"./entry.b2982cee.js";const t="IDropdownDivider",r=e({name:t}),a={class:"dropdown-divider",role:"separator"};function c(_,d,p,i,l,m){return o(),n("div",a)}const u=s(r,[["render",c]]);export{u as default};

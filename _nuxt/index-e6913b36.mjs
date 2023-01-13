@@ -1,1 +1,0 @@
-import{d as o,o as t,c as a,r as s,_ as r}from"./entry-72ed921d.mjs";const n="ILayoutFooter";var _=o({name:n});const c={class:"layout-footer"};function d(e,l,b,f,u,p){return t(),a("footer",c,[s(e.$slots,"default",{},void 0,!0)])}var m=r(_,[["render",d],["__scopeId","data-v-cbbb0aba"]]);export{m as default};

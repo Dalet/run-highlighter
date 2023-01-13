@@ -1,1 +1,0 @@
-import{d as n,U as r,o as e,C as t,y as i,r as o,Y as s,_ as b}from"./entry-72ed921d.mjs";const d="INavbarBrand";var v=n({name:d,mixins:[r],props:{tag:{type:String,default:"div"}}});function l(a,p,c,g,m,f){return e(),t(s(a.isTag),{class:"navbar-brand",tag:a.tag,translate:"no"},{default:i(()=>[o(a.$slots,"default")]),_:3},8,["tag"])}var _=b(v,[["render",l]]);export{_ as default};

@@ -1,1 +1,0 @@
-import{o as s,c as a,r as n,m as t,_ as l,X as f}from"./entry-72ed921d.mjs";const p=["for"];function i(o,r,m,c,d,u){return s(),a("label",t({class:["form-label",o.classes],for:o.forAttr},o.$attrs,{onClick:r[0]||(r[0]=(...e)=>o.onClick&&o.onClick(...e))}),[n(o.$slots,"default")],16,p)}var k=l(f,[["render",i]]);export{k as default};

@@ -1,1 +1,0 @@
-import{o as s,c as o,r as a,n as r,_ as n,W as t}from"./entry-72ed921d.mjs";const l=["name"];function c(e,p,m,_,d,f){return s(),o("fieldset",{class:r(["form-group",e.classes]),name:e.name,role:"group"},[a(e.$slots,"default")],10,l)}var i=n(t,[["render",c]]);export{i as default};

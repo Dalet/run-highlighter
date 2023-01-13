@@ -1,0 +1,1 @@
+import{a as e,L as n,o as t,c as s,x as o,r,Q as i,j as c}from"./entry.b2982cee.js";const l="INavbarBrand",p=e({name:l,mixins:[n],props:{tag:{type:String,default:"div"}}});function d(a,_,m,f,u,g){return t(),s(i(a.isTag),{class:"navbar-brand",tag:a.tag,translate:"no"},{default:o(()=>[r(a.$slots,"default")]),_:3},8,["tag"])}const v=c(p,[["render",d]]);export{v as default};

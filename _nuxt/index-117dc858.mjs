@@ -1,1 +1,0 @@
-import{o as e,c as a,r as o,n as r,_ as t,B as n}from"./entry-72ed921d.mjs";function l(s,c,p,_,i,d){return e(),a("div",{class:r(["list-group",s.classes]),role:"list"},[o(s.$slots,"default")],2)}var f=t(n,[["render",l]]);export{f as default};

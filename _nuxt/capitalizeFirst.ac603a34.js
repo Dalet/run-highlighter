@@ -1,0 +1,1 @@
+function r(e,t="camel"){const a=t==="camel"?/([A-Z])/g:/_([a-zA-Z])/g;return e.replace(a,(c,n)=>"-"+n.toLowerCase())}function o(e,t){return["string","number"].indexOf(typeof t)>-1&&t!==""?`${r(e)}-${t}`:r(e)}function s(e){return e.charAt(0).toUpperCase()+e.slice(1)}export{o as b,s as c};
