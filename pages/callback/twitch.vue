@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useTwitchAuthStore } from '~~/store/auth/twitch';
 
-const fragments: { access_token?: string } = {};
+const fragments: { [key: string]: string | undefined, access_token?: string } = {};
 useRoute().hash.substring(1).split("&")
     .every(s => {
         const parts = s.split("=");
