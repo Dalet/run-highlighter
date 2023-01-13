@@ -12,7 +12,7 @@
   "devDependencies": {
     "@types/jquery": "3.5.14",
     "nuxt": "3.0.0",
-    "sass": "1.52.1",
+    "sass": "1.57.1",
     "vitest": "0.27.0"
   },
   "dependencies": {

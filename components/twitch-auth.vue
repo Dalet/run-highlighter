@@ -26,7 +26,7 @@ function click() {
 
 <template>
     <i-button type="button" :disabled="loading" class="_background:twitch btn-twitch" @click="click">
-        <img v-if="!loading" :src="twitchLogoUrl" class="_margin-right:1/2 inkline-icon -lg"/>
+        <img v-if="!loading" :src="twitchLogoUrl" class="provider-icon _margin-right:1/2"/>
         <i-loader class="_margin-right:1/2" v-else color="light" size="lg"></i-loader>
         {{ btnText }}
     </i-button>
@@ -35,5 +35,9 @@ function click() {
 <style scoped>
 .btn-twitch:hover {
     background-color: #7349c1!important;
+}
+
+.provider-icon {
+    height: 17px;
 }
 </style>

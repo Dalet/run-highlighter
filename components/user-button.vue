@@ -32,7 +32,7 @@ watch(() => auth.isSignedIn, fetchUserInfo);
 </div>
 </template>
 
-<style>
+<style scoped>
 .profile-picture {
     height:32px;
     border-radius: 50%;
