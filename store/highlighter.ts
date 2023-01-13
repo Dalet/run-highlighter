@@ -18,8 +18,9 @@ interface HighlighterState {
 }
 
 let demoFileMetadata: {} | null = null;
-const isDemoFile = (file: File | null) => file && demoFileMetadata 
-    && Object.keys(demoFileMetadata).every(key => file[key] === demoFileMetadata![key]);
+const isDemoFile = (file: File | null) => file && demoFileMetadata
+    && Object.keys(demoFileMetadata)
+        .every(key => file[<keyof typeof file>key] === demoFileMetadata![<keyof typeof demoFileMetadata>key]);
 
 async function getDemoFile() {
     const response = await fetch(appLink("demo-splits.lss"));
@@ -32,7 +33,7 @@ async function getDemoFile() {
     return file;
 }
 
-function sleep(ms) {
+function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -41,7 +42,7 @@ export const useHighlighterStore = defineStore(key, {
         channel: "",
         file: null,
         selectedRun: null,
-        game: {} 
+        game: {}
     } as HighlighterState),
     getters: {
         isDemoMode: state => isDemoFile(state.file)
@@ -67,7 +68,7 @@ export const useHighlighterStore = defineStore(key, {
 
             // full game runs
             try {
-                const parsedRuns = Run.ArrayFromXML(data); 
+                const parsedRuns = Run.ArrayFromXML(data);
                 statePatch.game.runs = parsedRuns;
                 if (statePatch.game.runs.length > 0) {
                     const firstRun = parsedRuns[0];
