@@ -1,5 +1,4 @@
 import { defineStore } from "pinia";
-import { useStorage } from "@vueuse/core";
 
 const buffer_default = 7;
 const truncate_default = false;
@@ -25,5 +24,6 @@ const createDefaultSettings = (): AppSettings => ({
 
 const key = "appSettings";
 export const useAppSettingsStore = defineStore(key, {
-    state: () => useStorage(key, createDefaultSettings()),
+    state: () => createDefaultSettings(),
+    persist: true
 });

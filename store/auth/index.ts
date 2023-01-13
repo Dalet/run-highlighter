@@ -1,27 +1,23 @@
 import { defineStore } from "pinia";
-import { useStorage } from "@vueuse/core";
 import { useHighlighterStore } from "../highlighter";
-import { demoProvider, DEMO_PROVIDER_NAME } from "./demo";
-import { TWITCH_PROVIDER_NAME, useTwitchAuthStore } from "./twitch";
+import { DEMO_PROVIDER_NAME } from "./demo";
+import { AuthProviderFactory, getAuthProvider, registerAuthProvider } from "./provider-registry";
 
-type AuthInfo = {
-    providerName: string;
-}
-
-function getInitialState(): AuthInfo {
+function getInitialState() {
     return {
         providerName: NONE_PROVIDER
     }
 }
 
-const key = "auth";
-export const useAuthStore = defineStore(key, {
-    state: () => useStorage(key, getInitialState()),
+export const useAuthStore = defineStore("auth", {
+    state: () => getInitialState(),
+    persist: true,
     getters: {
-        isSignedIn: state => getAuthProvider(state.providerName).isSignedIn,
-        providerIcon: state => getAuthProvider(state.providerName).providerIcon,
-        isDemoMode: state => state.providerName === DEMO_PROVIDER_NAME,
-        profileInfo: state => getAuthProvider(state.providerName).profileInfo
+        useProvider: state => getAuthProvider(state.providerName),
+        isSignedIn(): boolean { return this.useProvider().isSignedIn; },
+        providerIcon(): string { return this.useProvider().providerIcon; },
+        profileInfo(): ProfileInfo | null { return this.useProvider().profileInfo; },
+        isDemoMode: state => state.providerName === DEMO_PROVIDER_NAME
     },
     actions: {
         reset() {
@@ -29,33 +25,33 @@ export const useAuthStore = defineStore(key, {
         },
 
         signInWithSavedProvider() {
-            getAuthProvider(this.providerName).restoreLogin();
+            this.useProvider().restoreLogin();
             if (!this.isSignedIn) {
                 this.reset();
             }
         },
 
-        signOut() {
-            getAuthProvider(this.providerName).signOut();
+        async signOut() {
+            this.useProvider().signOut();
             this.reset();
             useHighlighterStore().resetSelection();
-            navigateTo("/sign-in");
+            await navigateTo("/sign-in");
         },
 
         async getProfileInfo() {
-            return await getAuthProvider(this.providerName).getProfileInfo();
+            return await this.useProvider().getProfileInfo();
         },
 
-        signInWithDemoMode() {
-            getAuthProvider(DEMO_PROVIDER_NAME).signIn("");
+        async signInWithDemoMode() {
             this.providerName = DEMO_PROVIDER_NAME;
-            navigateTo("/");
+            await this.useProvider().signIn("");
+            await navigateTo("/");
         }
     }
 });
 
 const NONE_PROVIDER = "none";
-const noProvider: AuthProvider =({
+const noProvider: AuthProvider = ({
     get isSignedIn() { return false; },
     get profileInfo() { return null; },
     get providerIcon() { return ""; },
@@ -64,20 +60,6 @@ const noProvider: AuthProvider =({
     signOut() { throw new Error("No provider"); },
     getProfileInfo() { throw new Error("No provider"); }
 });
-
-export const authProviders: Record<string, () => AuthProvider> = {
-    [NONE_PROVIDER]: () => noProvider,
-    [DEMO_PROVIDER_NAME]: () => demoProvider,
-    [TWITCH_PROVIDER_NAME]: useTwitchAuthStore
-}
-
-function getAuthProvider(providerName: string): AuthProvider {
-    return authProviders[providerName]();
-}
-
-export const registerAuthProvider = function(name: string, providerGetter: () => AuthProvider) {
-    authProviders[name] = providerGetter; 
-}
 
 export interface AuthProvider {
     get isSignedIn(): boolean;
@@ -93,3 +75,5 @@ export type ProfileInfo = {
     profilePictureUrl: string;
     displayName: string;
 }
+
+registerAuthProvider(NONE_PROVIDER, () => noProvider);

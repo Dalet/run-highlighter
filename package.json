@@ -10,6 +10,7 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@pinia-plugin-persistedstate/nuxt": "1.0.0",
     "@types/jquery": "3.5.14",
     "nuxt": "3.0.0",
     "sass": "1.57.1",
@@ -19,8 +20,6 @@
     "@inkline/inkline": "3.1.10",
     "@inkline/nuxt": "3.1.4",
     "@pinia/nuxt": "0.4.6",
-    "@vueuse/core": "9.10.0",
-    "@vueuse/nuxt": "9.10.0",
     "dayjs": "1.11.3",
     "jquery": "3.6.0",
     "pinia": "2.0.28"

@@ -1,8 +1,8 @@
 import { defineStore } from "pinia";
-import { useStorage } from "@vueuse/core";
 import { twitchApi } from "~~/services/twitch-api";
-import { registerAuthProvider, useAuthStore, ProfileInfo as ProfileInfo } from ".";
+import { AuthProvider, ProfileInfo, useAuthStore } from ".";
 import { useHighlighterStore } from "../highlighter";
+import { registerAuthProvider } from "./provider-registry";
 
 export const TWITCH_PROVIDER_NAME = "twitch";
 
@@ -31,11 +31,10 @@ export async function doApiCall<T>(func: () => Promise<T>): Promise<T> {
     }
 }
 
-export type TwitchAuthStore = ReturnType<typeof useTwitchAuthStore>;
-
 const key = "twitch-auth";
 export const useTwitchAuthStore = defineStore(key, {
-    state: () => useStorage(key, getInitialState()),
+    state: () => getInitialState(),
+    persist: true,
     getters: {
         isSignedIn: state => state.accessToken != null,
         providerIcon: _ => appLink("images/twitch-glitch-logo.svg")
@@ -85,3 +84,5 @@ export const useTwitchAuthStore = defineStore(key, {
         },
     }
 });
+
+registerAuthProvider(TWITCH_PROVIDER_NAME, useTwitchAuthStore);

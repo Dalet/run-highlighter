@@ -1,14 +1,17 @@
 import { defineNuxtConfig } from "nuxt/config"
 
-// https://v3.nuxtjs.org/api/configuration/nuxt.config
+// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     modules: [
         "@pinia/nuxt",
+        "@pinia-plugin-persistedstate/nuxt",
         "@inkline/nuxt",
-        "@vueuse/nuxt"
     ],
     inkline: {
         colorMode: "dark"
+    },
+    piniaPersistedstate: {
+        storage: "localStorage"
     },
     app: {
         baseURL: "/run-highlighter/",

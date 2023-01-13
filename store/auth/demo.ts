@@ -1,5 +1,6 @@
 import { AuthProvider, ProfileInfo } from ".";
 import { useHighlighterStore } from "../highlighter";
+import { registerAuthProvider } from "./provider-registry";
 
 export const DEMO_PROVIDER_NAME = "demo";
 
@@ -27,3 +28,5 @@ export const demoProvider: AuthProvider = reactive({
     async restoreLogin() { this.signOut(); },
     async getProfileInfo() { return getDemoProfileInfo(); }
 });
+
+registerAuthProvider(DEMO_PROVIDER_NAME, () => demoProvider);
